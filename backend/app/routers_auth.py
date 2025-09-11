@@ -52,6 +52,7 @@ def login_cookie(response: Response, form: OAuth2PasswordRequestForm = Depends()
         "httponly": True,
         "samesite": settings.cookie_samesite,
         "secure": settings.cookie_secure,
+        "path": "/",
     }
     if settings.cookie_domain:
         cookie_kwargs["domain"] = settings.cookie_domain
@@ -73,6 +74,7 @@ def refresh_token(request: Request, response: Response, db: Session = Depends(ge
         "httponly": True,
         "samesite": settings.cookie_samesite,
         "secure": settings.cookie_secure,
+        "path": "/",
     }
     if settings.cookie_domain:
         cookie_kwargs["domain"] = settings.cookie_domain
@@ -86,12 +88,19 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     if rt:
         db.query(RefreshToken).filter(RefreshToken.token == rt).update({RefreshToken.revoked: True})
         db.commit()
-    # Clear cookies
-    delete_kwargs = {}
+    # Clear cookies (explicitly set expired cookies with matching attributes)
+    ck = {
+        "httponly": True,
+        "samesite": settings.cookie_samesite,
+        "secure": settings.cookie_secure,
+        "path": "/",
+        "max_age": 0,
+        "expires": 0,
+    }
     if settings.cookie_domain:
-        delete_kwargs["domain"] = settings.cookie_domain
-    response.delete_cookie("access_token", **delete_kwargs)
-    response.delete_cookie("refresh_token", **delete_kwargs)
+        ck["domain"] = settings.cookie_domain
+    response.set_cookie("access_token", "", **ck)
+    response.set_cookie("refresh_token", "", **ck)
     return {"status": "ok"}
 
 
@@ -132,10 +141,17 @@ def delete_account(request: Request, response: Response, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="User not found")
     db.delete(user)
     db.commit()
-    # Clear cookies
-    delete_kwargs = {}
+    # Clear cookies (explicitly set expired cookies with matching attributes)
+    ck = {
+        "httponly": True,
+        "samesite": settings.cookie_samesite,
+        "secure": settings.cookie_secure,
+        "path": "/",
+        "max_age": 0,
+        "expires": 0,
+    }
     if settings.cookie_domain:
-        delete_kwargs["domain"] = settings.cookie_domain
-    response.delete_cookie("access_token", **delete_kwargs)
-    response.delete_cookie("refresh_token", **delete_kwargs)
+        ck["domain"] = settings.cookie_domain
+    response.set_cookie("access_token", "", **ck)
+    response.set_cookie("refresh_token", "", **ck)
     return {"status": "deleted"}
