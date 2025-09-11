@@ -110,3 +110,32 @@ def me(db: Session = Depends(get_db), request: Request = None):
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
+
+
+@router.delete("/account")
+def delete_account(request: Request, response: Response, db: Session = Depends(get_db)):
+    # Authenticate via cookie/header
+    from .deps import _get_token_from_request
+    from .auth import decode_access_token
+    token = _get_token_from_request(request)
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    payload = decode_access_token(token)
+    if not payload or "sub" not in payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = payload["sub"]
+    # Revoke all refresh tokens for this user
+    db.query(RefreshToken).filter(RefreshToken.user_id == user_id).update({RefreshToken.revoked: True})
+    # Delete user cascades subscriptions/expenses via ORM cascade
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    # Clear cookies
+    delete_kwargs = {}
+    if settings.cookie_domain:
+        delete_kwargs["domain"] = settings.cookie_domain
+    response.delete_cookie("access_token", **delete_kwargs)
+    response.delete_cookie("refresh_token", **delete_kwargs)
+    return {"status": "deleted"}

@@ -27,17 +27,17 @@ export default function SubscriptionsPage() {
   const [error, setError] = useState<string>("");
   const [form, setForm] = useState({
     name: "",
-    price: 0,
+    price: "", // keep as string to avoid leading zero issues
     currency: "JPY",
     billing_cycle: "monthly",
-  billing_day: undefined as number | undefined,
-  start_date: "",
+    billing_day: undefined as number | undefined,
+    start_date: "",
   });
   const { push } = useToast();
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
-    price: 0,
+    price: "",
     currency: "JPY",
     billing_cycle: "monthly",
   });
@@ -62,7 +62,8 @@ export default function SubscriptionsPage() {
   const create = async () => {
     if (!me) return;
     setError("");
-    if (!form.name || form.price <= 0) {
+  const priceNum = Number((form.price || "").toString().replace(/^0+(\d)/, "$1"));
+  if (!form.name || isNaN(priceNum) || priceNum <= 0) {
       push({ type: "error", message: "Name and positive price are required." });
       return;
     }
@@ -72,14 +73,14 @@ export default function SubscriptionsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
-          price: form.price,
+      price: priceNum,
           currency: form.currency,
           billing_cycle: form.billing_cycle,
           billing_day: form.billing_day || undefined,
           start_date: form.start_date || undefined,
         }),
       });
-      setForm({ name: "", price: 0, currency: "JPY", billing_cycle: "monthly", billing_day: undefined, start_date: "" });
+    setForm({ name: "", price: "", currency: "JPY", billing_cycle: "monthly", billing_day: undefined, start_date: "" });
       push({ type: "success", message: "Subscription added" });
       await load();
     } catch (e: any) {
@@ -103,7 +104,7 @@ export default function SubscriptionsPage() {
     setEditId(s.id);
     setEditForm({
       name: s.name,
-      price: s.price,
+      price: String(s.price ?? ""),
       currency: s.currency,
       billing_cycle: s.billing_cycle,
     });
@@ -117,10 +118,15 @@ export default function SubscriptionsPage() {
     if (!me || !editId) return;
     setError("");
     try {
+      const priceNum = Number((editForm.price || "").toString().replace(/^0+(\d)/, "$1"));
+      if (isNaN(priceNum) || priceNum <= 0) {
+        push({ type: "error", message: "Price must be a positive number." });
+        return;
+      }
       await apiJson(`/api/v1/subscriptions/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({ ...editForm, price: priceNum }),
       });
       setEditId(null);
       push({ type: "success", message: "Subscription updated" });
@@ -141,7 +147,26 @@ export default function SubscriptionsPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-start">
         <input className="border p-2 sm:col-span-2" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input className="border p-2" placeholder="Price" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+        <input
+          className="border p-2"
+          placeholder="Price"
+          inputMode="decimal"
+          value={form.price}
+          onChange={(e) => {
+            // Allow empty, digits, optional single dot; strip leading zeros gracefully
+            let v = e.target.value;
+            if (v === "") return setForm({ ...form, price: "" });
+            // Keep only digits and at most one dot
+            v = v.replace(/[^0-9.]/g, "");
+            const parts = v.split(".");
+            if (parts.length > 2) {
+              v = parts[0] + "." + parts.slice(1).join("");
+            }
+            // Trim leading zeros unless immediately followed by dot or the value is just "0"
+            v = v.replace(/^0+(\d)/, "$1");
+            setForm({ ...form, price: v });
+          }}
+        />
         <input className="border p-2" placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
         <select className="border p-2" value={form.billing_cycle} onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}>
           <option value="monthly">monthly</option>
@@ -150,7 +175,10 @@ export default function SubscriptionsPage() {
           <option value="custom">custom</option>
         </select>
         <input className="border p-2 sm:col-span-2" placeholder="Billing day of month (1-31)" type="number" value={form.billing_day ?? ""} onChange={(e) => setForm({ ...form, billing_day: e.target.value ? Number(e.target.value) : undefined })} />
-        <input className="border p-2" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+        <div className="flex flex-col sm:col-span-1">
+          <input className="border p-2" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+          <span className="text-[11px] text-gray-600 mt-1">Start date (used to seed next payment date).</span>
+        </div>
       </div>
       <button className="px-4 py-2 bg-blue-600 text-white" onClick={create}>Add</button>
 
@@ -161,7 +189,22 @@ export default function SubscriptionsPage() {
               <div className="space-y-2">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <input className="border p-2" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-                  <input className="border p-2" type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })} />
+                  <input
+                    className="border p-2"
+                    inputMode="decimal"
+                    value={editForm.price}
+                    onChange={(e) => {
+                      let v = e.target.value;
+                      if (v === "") return setEditForm({ ...editForm, price: "" });
+                      v = v.replace(/[^0-9.]/g, "");
+                      const parts = v.split(".");
+                      if (parts.length > 2) {
+                        v = parts[0] + "." + parts.slice(1).join("");
+                      }
+                      v = v.replace(/^0+(\d)/, "$1");
+                      setEditForm({ ...editForm, price: v });
+                    }}
+                  />
                   <input className="border p-2" value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
                   <select className="border p-2" value={editForm.billing_cycle} onChange={(e) => setEditForm({ ...editForm, billing_cycle: e.target.value })}>
                     <option value="monthly">monthly</option>

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiJson } from "@/lib/http";
-import { getMe } from "@/lib/auth";
+import { useSession } from "@/lib/session";
+import { useRouter } from "next/navigation";
 
 type Dashboard = {
   month: string;
@@ -17,34 +18,37 @@ function ym(date: Date) {
 }
 
 export default function DashboardPage() {
-  const [me, setMe] = useState<any | null>(null);
+  const { user, loading } = useSession();
+  const router = useRouter();
   const [month, setMonth] = useState<string>(ym(new Date()));
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    getMe().then(setMe).catch(() => setMe(null));
-  }, []);
-
-  useEffect(() => {
-    if (!me) return;
+    if (!user) return;
     setError("");
     apiJson<Dashboard>(`/api/v1/dashboard?month=${month}`)
       .then(setData)
       .catch((e) => setError(String(e)));
-  }, [me, month]);
+  }, [user, month]);
 
   const total = useMemo(() => {
     if (!data) return 0;
     return Number((data.subscription_total + data.variable_total).toFixed(2));
   }, [data]);
 
-  if (me === null && !data && !error) return <div className="p-8">Loading...</div>;
-  if (!me) return <div className="p-8">Please log in first.</div>;
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/");
+    }
+  }, [loading, user, router]);
+
+  if (loading) return <div className="p-8">Loading...</div>;
+  if (!user) return <div className="p-8">Redirecting...</div>;
 
   return (
     <div className="p-8 space-y-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+  <h1 className="text-2xl font-bold">Dashboard</h1>
 
       <div className="flex items-center gap-2">
         <label className="text-sm">Month:</label>
@@ -58,8 +62,9 @@ export default function DashboardPage() {
 
       {error && <p className="text-red-600 whitespace-pre-wrap">{error}</p>}
 
-      {data && (
+    {data && (
         <div className="space-y-6">
+  <p className="text-sm text-gray-600">Metrics below reflect the selected month ({data.month}). Subscription total counts actual scheduled charges within that month (based on start date, billing day, cycle, and interval).</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="border p-4 rounded">
               <div className="text-sm text-gray-500">Subscription Total</div>

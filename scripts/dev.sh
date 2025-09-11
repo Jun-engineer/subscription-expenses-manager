@@ -163,6 +163,7 @@ start_backend() {
   if [ ! -f .uvicorn.pid ]; then
     # Start in background, capture PID
   nohup env DATABASE_URL="${DATABASE_URL}" REDIS_URL="${REDIS_URL}" \
+      CORS_ORIGINS="http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:3005,http://localhost:3006,http://localhost:3007,http://localhost:3008,http://localhost:3009,http://localhost:3010" \
       uvicorn app.main:app --reload --host 0.0.0.0 --port "${BACKEND_PORT}" \
       > "${PROJECT_ROOT}/backend/.uvicorn.out" 2>&1 &
     echo $! > .uvicorn.pid
@@ -177,6 +178,7 @@ start_backend() {
       sleep 1
       rm -f .uvicorn.pid
   nohup env DATABASE_URL="${DATABASE_URL}" REDIS_URL="${REDIS_URL}" \
+        CORS_ORIGINS="http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004,http://localhost:3005,http://localhost:3006,http://localhost:3007,http://localhost:3008,http://localhost:3009,http://localhost:3010" \
         uvicorn app.main:app --reload --host 0.0.0.0 --port "${BACKEND_PORT}" \
         > "${PROJECT_ROOT}/backend/.uvicorn.out" 2>&1 &
       echo $! > .uvicorn.pid

@@ -1,10 +1,11 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from calendar import monthrange
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, and_
 from sqlalchemy.orm import Session
 from .deps import get_db, get_current_user
 from .models import Expense, Subscription, User
+from .utils_billing import count_occurrences_in_month
 
 router = APIRouter(prefix="/api/v1", tags=["dashboard"])
 
@@ -35,22 +36,24 @@ def dashboard(month: str | None = None, db: Session = Depends(get_db), user: Use
         .scalar()
     )
 
-    # Simple subscription monthly equivalent: monthly=price, yearly=price/12, weekly~ price*4.345, custom -> treat as monthly for MVP
+    # Subscriptions active for user
     subs = (
         db.query(Subscription)
         .filter(Subscription.user_id == user.id, Subscription.active == True)  # noqa: E712
         .all()
     )
+    
     subscription_total = 0.0
     for s in subs:
-        if s.billing_cycle == "monthly":
-            subscription_total += float(s.price)
-        elif s.billing_cycle == "yearly":
-            subscription_total += float(s.price) / 12.0
-        elif s.billing_cycle == "weekly":
-            subscription_total += float(s.price) * 4.345  # average weeks per month
-        else:
-            subscription_total += float(s.price)
+        occurrences = count_occurrences_in_month(
+            billing_cycle=s.billing_cycle,
+            billing_interval=s.billing_interval,
+            start_date=s.start_date,
+            billing_day=s.billing_day,
+            window_start=start,
+            window_end=end,
+        )
+        subscription_total += float(s.price) * occurrences
 
     # Expense category breakdown within month
     rows = (
@@ -61,9 +64,9 @@ def dashboard(month: str | None = None, db: Session = Depends(get_db), user: Use
     )
     breakdown = {k or "Uncategorized": float(v) for k, v in rows}
 
-    # Upcoming payments: next 7 days from today
+    # Upcoming payments: next 7 days from today (cross-month aware)
     today = date.today()
-    upcoming_end = date(today.year, today.month, min(today.day + 7, monthrange(today.year, today.month)[1]))
+    upcoming_end = today + timedelta(days=7)
     upcoming = (
         db.query(Subscription)
         .filter(

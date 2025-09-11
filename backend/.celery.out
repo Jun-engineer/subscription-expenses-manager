@@ -1,10 +1,10 @@
  
  -------------- celery@LAPTOP-0HCFSU48 v5.5.3 (immunity)
 --- ***** ----- 
--- ******* ---- Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39 2025-09-11 20:50:05
+-- ******* ---- Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39 2025-09-12 01:12:24
 - *** --- * --- 
 - ** ---------- [config]
-- ** ---------- .> app:         worker:0x7c4716a4c200
+- ** ---------- .> app:         worker:0x7501be06de50
 - ** ---------- .> transport:   redis://localhost:6380/0
 - ** ---------- .> results:     redis://localhost:6380/0
 - *** --- * --- .> concurrency: 8 (prefork)
@@ -18,8 +18,8 @@
   . app.worker.add
   . app.worker.compute_upcoming_payments
 
-[2025-09-11 20:50:05,835: INFO/MainProcess] Connected to redis://localhost:6380/0
-[2025-09-11 20:50:05,843: INFO/MainProcess] mingle: searching for neighbors
-[2025-09-11 20:50:06,574: INFO/Beat] beat: Starting...
-[2025-09-11 20:50:06,855: INFO/MainProcess] mingle: all alone
-[2025-09-11 20:50:06,889: INFO/MainProcess] celery@LAPTOP-0HCFSU48 ready.
+[2025-09-12 01:12:24,732: INFO/MainProcess] Connected to redis://localhost:6380/0
+[2025-09-12 01:12:24,736: INFO/MainProcess] mingle: searching for neighbors
+[2025-09-12 01:12:25,614: INFO/Beat] beat: Starting...
+[2025-09-12 01:12:25,746: INFO/MainProcess] mingle: all alone
+[2025-09-12 01:12:25,793: INFO/MainProcess] celery@LAPTOP-0HCFSU48 ready.
