@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API, getMe, loginWithCookie, logoutCookie } from "@/lib/auth";
+import { API, loginWithCookie, logoutCookie } from "@/lib/auth";
+import { useSession } from "@/lib/session";
+import { useRouter } from "next/navigation";
 
 type Subscription = {
   id: string;
@@ -13,27 +15,22 @@ type Subscription = {
 };
 
 export default function Home() {
-  const [me, setMe] = useState<any | null>(null);
+  const { user, loading, login } = useSession();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [subs, setSubs] = useState<Subscription[]>([]);
   const [error, setError] = useState<string>("");
 
-  const loadMe = async () => {
-    try {
-      const user = await getMe();
-      setMe(user);
-    } catch (e: any) {
-      setError(e.message || String(e));
+  // If logged in, redirect to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
     }
-  };
+  }, [loading, user, router]);
 
   useEffect(() => {
-    loadMe();
-  }, []);
-
-  useEffect(() => {
-    if (!me) return;
+    if (!user) return;
     fetch(`${API}/api/v1/subscriptions`, { credentials: "include" })
       .then(async (r) => {
         if (!r.ok) throw new Error(await r.text());
@@ -41,7 +38,7 @@ export default function Home() {
       })
       .then((data) => setSubs(data))
       .catch((e) => setError(String(e)));
-  }, [me]);
+  }, [user]);
 
   const signup = async () => {
     setError("");
@@ -58,17 +55,19 @@ export default function Home() {
     }
   };
 
-  const login = async () => {
+  const doLogin = async () => {
     setError("");
     try {
-      await loginWithCookie(email, password);
-      await loadMe();
+      await login(email, password);
     } catch (e: any) {
       setError(e.message || String(e));
     }
   };
 
-  if (!me) {
+  if (loading) {
+    return <div className="p-8 max-w-md mx-auto">Loading...</div>;
+  }
+  if (!user) {
     return (
       <div className="p-8 max-w-md mx-auto space-y-4">
         <h1 className="text-2xl font-bold">Subscriptions Manager (MVP)</h1>
@@ -76,37 +75,11 @@ export default function Home() {
         <input className="border p-2 w-full" placeholder="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <div className="flex gap-2">
           <button className="px-4 py-2 bg-blue-600 text-white" onClick={signup}>Sign up</button>
-          <button className="px-4 py-2 bg-green-600 text-white" onClick={login}>Log in</button>
+          <button className="px-4 py-2 bg-green-600 text-white" onClick={doLogin}>Log in</button>
         </div>
         {error && <p className="text-red-600 whitespace-pre-wrap">{error}</p>}
       </div>
     );
   }
-
-  return (
-    <div className="p-8 max-w-2xl mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Your subscriptions</h1>
-        <button
-          className="text-sm underline"
-          onClick={async () => {
-            await logoutCookie();
-            setMe(null);
-          }}
-        >
-          Logout
-        </button>
-      </div>
-      {error && <p className="text-red-600 whitespace-pre-wrap">{error}</p>}
-      <ul className="space-y-2">
-        {subs.map((s) => (
-          <li key={s.id} className="border p-3 rounded">
-            <div className="font-semibold">{s.name}</div>
-            <div className="text-sm">{s.price} {s.currency} • {s.billing_cycle} {s.next_payment_date ? `• next: ${s.next_payment_date}` : ""}</div>
-          </li>
-        ))}
-      </ul>
-      {subs.length === 0 && <p>No subscriptions yet.</p>}
-    </div>
-  );
+  return <div className="p-8">Redirecting...</div>;
 }

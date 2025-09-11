@@ -39,7 +39,8 @@ export default function DashboardPage() {
     return Number((data.subscription_total + data.variable_total).toFixed(2));
   }, [data]);
 
-  if (!me) return <div className="p-8">Please log in on the home page first.</div>;
+  if (me === null && !data && !error) return <div className="p-8">Loading...</div>;
+  if (!me) return <div className="p-8">Please log in first.</div>;
 
   return (
     <div className="p-8 space-y-6 max-w-3xl mx-auto">

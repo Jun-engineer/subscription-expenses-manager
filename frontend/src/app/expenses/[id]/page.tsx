@@ -23,7 +23,8 @@ export default function ExpenseDetail() {
       .catch((e) => setError(String(e)));
   }, [me, id]);
 
-  if (!me) return <div className="p-8">Please log in on the home page first.</div>;
+  if (me === null && !data && !error) return <div className="p-8">Loading...</div>;
+  if (!me) return <div className="p-8">Please log in first.</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!data) return <div className="p-8">Loading...</div>;
 

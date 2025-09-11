@@ -52,7 +52,8 @@ export default function NotificationsPage() {
     }
   };
 
-  if (!me) return <div className="p-8">Please log in on the home page first.</div>;
+  if (me === null && items.length === 0 && !error) return <div className="p-8">Loading...</div>;
+  if (!me) return <div className="p-8">Please log in first.</div>;
 
   return (
     <div className="p-8 space-y-4 max-w-2xl mx-auto">

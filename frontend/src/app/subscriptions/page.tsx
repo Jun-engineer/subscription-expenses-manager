@@ -131,7 +131,8 @@ export default function SubscriptionsPage() {
     }
   };
 
-  if (!me) return <div className="p-8">Please log in on the home page first.</div>;
+  if (me === null && items.length === 0 && !error) return <div className="p-8">Loading...</div>;
+  if (!me) return <div className="p-8">Please log in first.</div>;
 
   return (
     <div className="p-8 space-y-4 max-w-2xl mx-auto">
@@ -148,7 +149,7 @@ export default function SubscriptionsPage() {
           <option value="weekly">weekly</option>
           <option value="custom">custom</option>
         </select>
-        <input className="border p-2" placeholder="Billing day (1-31)" type="number" value={form.billing_day ?? ""} onChange={(e) => setForm({ ...form, billing_day: e.target.value ? Number(e.target.value) : undefined })} />
+  <input className="border p-2" placeholder="Billing day of month (1-31)" type="number" value={form.billing_day ?? ""} onChange={(e) => setForm({ ...form, billing_day: e.target.value ? Number(e.target.value) : undefined })} />
         <input className="border p-2" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
       </div>
       <button className="px-4 py-2 bg-blue-600 text-white" onClick={create}>Add</button>
@@ -169,6 +170,7 @@ export default function SubscriptionsPage() {
                     <option value="custom">custom</option>
                   </select>
                 </div>
+                <div className="text-xs text-gray-600">Billing day is used for monthly cycles. Leave blank if not applicable.</div>
                 <div className="flex gap-2">
                   <button className="px-3 py-1 bg-green-600 text-white text-sm" onClick={saveEdit}>Save</button>
                   <button className="px-3 py-1 text-sm" onClick={cancelEdit}>Cancel</button>
