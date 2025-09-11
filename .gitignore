@@ -38,6 +38,11 @@ backend/.uvicorn.out
 backend/celerybeat-schedule
 celerybeat-schedule
 celerybeat.pid
+backend/.celery.pid
+backend/.celery.out
+
+# PID files created by dev servers
+backend/.uvicorn.pid
 
 # Node/Next.js
 frontend/node_modules/

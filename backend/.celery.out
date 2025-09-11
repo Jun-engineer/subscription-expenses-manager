@@ -1,10 +1,10 @@
  
  -------------- celery@LAPTOP-0HCFSU48 v5.5.3 (immunity)
 --- ***** ----- 
--- ******* ---- Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39 2025-09-12 01:12:24
+-- ******* ---- Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.39 2025-09-12 01:42:25
 - *** --- * --- 
 - ** ---------- [config]
-- ** ---------- .> app:         worker:0x7501be06de50
+- ** ---------- .> app:         worker:0x7c6c54c4dd00
 - ** ---------- .> transport:   redis://localhost:6380/0
 - ** ---------- .> results:     redis://localhost:6380/0
 - *** --- * --- .> concurrency: 8 (prefork)
@@ -18,8 +18,11 @@
   . app.worker.add
   . app.worker.compute_upcoming_payments
 
-[2025-09-12 01:12:24,732: INFO/MainProcess] Connected to redis://localhost:6380/0
-[2025-09-12 01:12:24,736: INFO/MainProcess] mingle: searching for neighbors
-[2025-09-12 01:12:25,614: INFO/Beat] beat: Starting...
-[2025-09-12 01:12:25,746: INFO/MainProcess] mingle: all alone
-[2025-09-12 01:12:25,793: INFO/MainProcess] celery@LAPTOP-0HCFSU48 ready.
+[2025-09-12 01:42:25,814: INFO/MainProcess] Connected to redis://localhost:6380/0
+[2025-09-12 01:42:25,818: INFO/MainProcess] mingle: searching for neighbors
+[2025-09-12 01:42:26,684: INFO/Beat] beat: Starting...
+[2025-09-12 01:42:26,831: INFO/MainProcess] mingle: all alone
+[2025-09-12 01:42:26,871: INFO/MainProcess] celery@LAPTOP-0HCFSU48 ready.
+
+worker: Warm shutdown (MainProcess)
+[2025-09-12 01:45:11,714: INFO/MainProcess] beat: Shutting down...

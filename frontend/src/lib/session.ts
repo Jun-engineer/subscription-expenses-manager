@@ -21,6 +21,8 @@ export function useSession() {
     },
     async logout() {
       await logoutCookie();
+      // Immediately clear local session so UI updates synchronously
+      qc.setQueryData(["me"], null);
       await qc.invalidateQueries({ queryKey: ["me"] });
     },
     refresh() {

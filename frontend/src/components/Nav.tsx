@@ -41,9 +41,8 @@ export default function Nav() {
               try {
                 await logout();
               } finally {
-                // Navigate to Home and refresh to clear any stale UI
-                router.replace("/");
-                router.refresh();
+                // Hard navigate to Home to avoid any stale client state
+                window.location.replace("/");
               }
             }}
           >Logout</button>
