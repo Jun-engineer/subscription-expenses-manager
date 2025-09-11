@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    env_file: ./backend/.env
+    volumes:
+      - ./backend/app:/app/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  worker:
+    build: ./backend
+    env_file: ./backend/.env
+    command: celery -A app.worker worker -l info
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+
+  # Optional: run frontend through compose (you already have it locally)
+  # frontend:
+  #   image: node:20
+  #   working_dir: /app
+  #   volumes:
+  #     - ./frontend:/app
+  #   command: bash -lc "npm install && npm run dev"
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NEXT_PUBLIC_API_BASE=http://localhost:8000
+  #   depends_on:
+  #     - backend
+
+volumes:
+  pgdata:
