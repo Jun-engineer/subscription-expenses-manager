@@ -4,7 +4,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from .db import db_ping, engine
 from .config import settings
 from .models import Base
-from . import routers_auth, routers_subscriptions, routers_expenses, routers_notifications, routers_dashboard
+from . import routers_auth, routers_subscriptions, routers_expenses, routers_notifications, routers_dashboard, routers_maintenance
 
 app = FastAPI(title="Subscription & Expenses Manager API")
 
@@ -62,3 +62,4 @@ app.include_router(routers_subscriptions.router)
 app.include_router(routers_expenses.router)
 app.include_router(routers_notifications.router)
 app.include_router(routers_dashboard.router)
+app.include_router(routers_maintenance.router)

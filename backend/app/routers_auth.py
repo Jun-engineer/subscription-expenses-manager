@@ -47,9 +47,16 @@ def login_cookie(response: Response, form: OAuth2PasswordRequestForm = Depends()
     )
     db.add(r)
     db.commit()
-    # Cookies (Lax for dev; set Secure in production)
-    response.set_cookie("access_token", access, httponly=True, samesite="lax")
-    response.set_cookie("refresh_token", rt, httponly=True, samesite="lax")
+    # Cookies (configurable for prod)
+    cookie_kwargs = {
+        "httponly": True,
+        "samesite": settings.cookie_samesite,
+        "secure": settings.cookie_secure,
+    }
+    if settings.cookie_domain:
+        cookie_kwargs["domain"] = settings.cookie_domain
+    response.set_cookie("access_token", access, **cookie_kwargs)
+    response.set_cookie("refresh_token", rt, **cookie_kwargs)
     return Token(access_token=access)
 
 
@@ -62,7 +69,14 @@ def refresh_token(request: Request, response: Response, db: Session = Depends(ge
     if not rec or rec.expires_at < datetime.utcnow():
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     access = create_access_token(str(rec.user_id), expires_delta=timedelta(minutes=settings.access_token_expire_minutes))
-    response.set_cookie("access_token", access, httponly=True, samesite="lax")
+    cookie_kwargs = {
+        "httponly": True,
+        "samesite": settings.cookie_samesite,
+        "secure": settings.cookie_secure,
+    }
+    if settings.cookie_domain:
+        cookie_kwargs["domain"] = settings.cookie_domain
+    response.set_cookie("access_token", access, **cookie_kwargs)
     return Token(access_token=access)
 
 
@@ -73,8 +87,11 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
         db.query(RefreshToken).filter(RefreshToken.token == rt).update({RefreshToken.revoked: True})
         db.commit()
     # Clear cookies
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+    delete_kwargs = {}
+    if settings.cookie_domain:
+        delete_kwargs["domain"] = settings.cookie_domain
+    response.delete_cookie("access_token", **delete_kwargs)
+    response.delete_cookie("refresh_token", **delete_kwargs)
     return {"status": "ok"}
 
 

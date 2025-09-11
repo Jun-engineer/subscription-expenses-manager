@@ -8,6 +8,15 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     cors_origins: Optional[str] = None  # comma-separated list (CORS_ORIGINS)
 
+    # Cookie settings for production deployments
+    cookie_secure: bool = False  # set True in production (requires HTTPS)
+    cookie_samesite: str = "lax"  # "lax" (dev) or "none" (cross-site) or "strict"
+    cookie_domain: Optional[str] = None  # e.g., .yourdomain.com if using subdomains
+
+    # Feature flags / ops
+    enable_celery: bool = True  # disable in Cloud Run if using scheduler + HTTP endpoint
+    maintenance_key: Optional[str] = None  # if set, required in X-Maintenance-Key header for maintenance endpoints
+
     # Optional envs, used by other modules but defined here to avoid extras errors
     database_url: Optional[str] = None
     redis_url: Optional[str] = None
