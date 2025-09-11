@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { API, logoutCookie } from "@/lib/auth";
+import { useSession } from "@/lib/session";
 
 export default function Nav() {
+  const { user } = useSession();
   const [unread, setUnread] = useState<number>(0);
   useEffect(() => {
     const load = async () => {
@@ -22,12 +24,14 @@ export default function Nav() {
 
   return (
     <nav className="p-4 border-b flex gap-4 items-center">
-      <Link className="underline" href="/">Home</Link>
+      {!user && <Link className="underline" href="/">Home</Link>}
       <Link className="underline" href="/dashboard">Dashboard</Link>
       <Link className="underline" href="/subscriptions">Subscriptions</Link>
       <Link className="underline" href="/expenses">Expenses</Link>
       <Link className="underline" href="/notifications">Notifications{unread ? ` (${unread})` : ""}</Link>
-      <button className="ml-auto text-sm underline" onClick={async () => { await logoutCookie(); location.reload(); }}>Logout</button>
+      {user && (
+        <button className="ml-auto text-sm underline" onClick={async () => { await logoutCookie(); location.reload(); }}>Logout</button>
+      )}
     </nav>
   );
 }

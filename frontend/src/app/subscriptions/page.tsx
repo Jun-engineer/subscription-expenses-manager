@@ -139,8 +139,8 @@ export default function SubscriptionsPage() {
       <h1 className="text-2xl font-bold">Subscriptions</h1>
       {error && <p className="text-red-600 whitespace-pre-wrap">{error}</p>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-6 gap-2">
-        <input className="border p-2" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+      <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-start">
+        <input className="border p-2 sm:col-span-2" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <input className="border p-2" placeholder="Price" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
         <input className="border p-2" placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
         <select className="border p-2" value={form.billing_cycle} onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}>
@@ -149,7 +149,7 @@ export default function SubscriptionsPage() {
           <option value="weekly">weekly</option>
           <option value="custom">custom</option>
         </select>
-  <input className="border p-2" placeholder="Billing day of month (1-31)" type="number" value={form.billing_day ?? ""} onChange={(e) => setForm({ ...form, billing_day: e.target.value ? Number(e.target.value) : undefined })} />
+        <input className="border p-2 sm:col-span-2" placeholder="Billing day of month (1-31)" type="number" value={form.billing_day ?? ""} onChange={(e) => setForm({ ...form, billing_day: e.target.value ? Number(e.target.value) : undefined })} />
         <input className="border p-2" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
       </div>
       <button className="px-4 py-2 bg-blue-600 text-white" onClick={create}>Add</button>
