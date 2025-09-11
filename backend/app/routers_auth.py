@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from .auth import create_access_token, hash_password, verify_password
 from .schemas import Token, UserCreate, UserOut
 from .deps import get_db
-from .models import User, RefreshToken
+from .models import User, RefreshToken, Notification, Subscription, Expense
+from sqlalchemy.exc import SQLAlchemyError
 from .config import settings
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -133,13 +134,22 @@ def delete_account(request: Request, response: Response, db: Session = Depends(g
     if not payload or "sub" not in payload:
         raise HTTPException(status_code=401, detail="Invalid token")
     user_id = payload["sub"]
-    # Revoke all refresh tokens for this user
-    db.query(RefreshToken).filter(RefreshToken.user_id == user_id).update({RefreshToken.revoked: True})
-    # Delete user cascades subscriptions/expenses via ORM cascade
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
+    # Best-effort: delete dependent rows explicitly to avoid FK constraint errors
+    try:
+        db.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete(synchronize_session=False)
+    except SQLAlchemyError:
+        # If the table doesn't exist in this environment, skip
+        db.rollback()
+    db.query(Notification).filter(Notification.user_id == user_id).delete(synchronize_session=False)
+    # Subscriptions/Expenses may have ORM cascade, but ensure deletion if cascade is not effective
+    db.query(Subscription).filter(Subscription.user_id == user_id).delete(synchronize_session=False)
+    db.query(Expense).filter(Expense.user_id == user_id).delete(synchronize_session=False)
+
+    # Finally delete user
+    deleted = db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
+    if deleted == 0:
+        db.rollback()
         raise HTTPException(status_code=404, detail="User not found")
-    db.delete(user)
     db.commit()
     # Clear cookies (explicitly set expired cookies with matching attributes)
     ck = {
