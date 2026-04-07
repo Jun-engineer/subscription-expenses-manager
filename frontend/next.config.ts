@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+const apiBase = process.env.NEXT_PUBLIC_API_BASE || "";
+const connectSrc = apiBase ? `'self' ${apiBase}` : "'self'";
+
 const nextConfig: NextConfig = {
   async headers() {
     return [
@@ -13,6 +16,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
+              `connect-src ${connectSrc}`,
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data:",
