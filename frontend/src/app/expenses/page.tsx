@@ -144,52 +144,74 @@ function ExpensesContent() {
 
 
 
+  const inputStyle = { background: "var(--background)", border: "1px solid var(--card-border)" };
+
   return (
-    <div className="p-4 sm:p-8 space-y-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold">Expenses</h1>
-      {error && <p className="text-red-600 text-sm bg-red-50 dark:bg-red-950 rounded-lg p-3">{error}</p>}
+    <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold tracking-tight">Expenses</h1>
+      {error && <p className="text-sm rounded-xl p-3" style={{ background: "var(--danger-light)", color: "var(--danger)" }}>{error}</p>}
 
-      <div className="flex items-center gap-2">
-        <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
-        <span className="text-sm">to</span>
-        <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
-        <button className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={load}>Filter</button>
+      {/* Date filter */}
+      <div className="flex flex-wrap items-center gap-2">
+        <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+        <span className="text-sm" style={{ color: "var(--muted)" }}>to</span>
+        <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+        <button className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80" style={{ background: "var(--accent-light)", color: "var(--accent)" }} onClick={load}>Filter</button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-6 gap-2">
-        <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
-        <input
-          className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700"
-          placeholder="Amount"
-          inputMode="decimal"
-          value={form.amount}
-          onChange={(e) => {
-            let v = e.target.value;
-            if (v === "") return setForm({ ...form, amount: "" });
-            v = v.replace(/[^0-9.]/g, "");
-            const parts = v.split(".");
-            if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
-            v = v.replace(/^0+(\d)/, "$1");
-            setForm({ ...form, amount: v });
-          }}
-        />
-        <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
-        <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-        <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" placeholder="Merchant" value={form.merchant} onChange={(e) => setForm({ ...form, merchant: e.target.value })} />
-        <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+      {/* Add form card */}
+      <div className="rounded-2xl p-5 shadow-sm space-y-4" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+        <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>Add Expense</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="flex flex-col">
+            <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            <span className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Date</span>
+          </div>
+          <input
+            className="rounded-xl px-3 py-2.5 text-sm outline-none"
+            style={inputStyle}
+            placeholder="Amount"
+            inputMode="decimal"
+            value={form.amount}
+            onChange={(e) => {
+              let v = e.target.value;
+              if (v === "") return setForm({ ...form, amount: "" });
+              v = v.replace(/[^0-9.]/g, "");
+              const parts = v.split(".");
+              if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
+              v = v.replace(/^0+(\d)/, "$1");
+              setForm({ ...form, amount: v });
+            }}
+          />
+          <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+          <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+          <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Merchant" value={form.merchant} onChange={(e) => setForm({ ...form, merchant: e.target.value })} />
+          <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+        </div>
+        <button
+          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+          style={{ background: "var(--accent)" }}
+          onClick={create}
+          disabled={busy}
+        >{busy ? "Adding\u2026" : "Add Expense"}</button>
       </div>
-      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50" onClick={create} disabled={busy}>{busy ? "Adding…" : "Add"}</button>
 
-      {items.length === 0 && !error && <p className="text-sm text-gray-500">No expenses yet. Add one above.</p>}
-      <ul className="space-y-2">
+      {/* List */}
+      {items.length === 0 && !error && (
+        <div className="text-center py-12 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>No expenses yet. Add one above.</p>
+        </div>
+      )}
+      <div className="space-y-3">
         {items.map((x) => (
-          <li key={x.id} className="border rounded-lg p-3 dark:border-gray-800">
+          <div key={x.id} className="rounded-2xl p-4 shadow-sm transition-all" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             {editId === x.id ? (
-              <div className="space-y-2">
-                <div className="grid grid-cols-1 sm:grid-cols-6 gap-2">
-                  <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700"
+                    className="rounded-xl px-3 py-2 text-sm outline-none"
+                    style={inputStyle}
                     inputMode="decimal"
                     value={editForm.amount}
                     onChange={(e) => {
@@ -202,31 +224,33 @@ function ExpensesContent() {
                       setEditForm({ ...editForm, amount: v });
                     }}
                   />
-                  <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
-                  <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} />
-                  <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" value={editForm.merchant} onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })} />
-                  <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
+                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} placeholder="Category" />
+                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.merchant} onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })} placeholder="Merchant" />
+                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Notes" />
                 </div>
                 <div className="flex gap-2">
-                  <button className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition" onClick={saveEdit}>Save</button>
-                  <button className="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={cancelEdit}>Cancel</button>
+                  <button className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all" style={{ background: "var(--accent)" }} onClick={saveEdit}>Save</button>
+                  <button className="px-4 py-2 rounded-xl text-sm font-medium transition-all" style={{ color: "var(--muted)" }} onClick={cancelEdit}>Cancel</button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between">
-                <a href={`/expenses/${x.id}`} className="block">
-                  <div className="font-semibold underline">{x.amount} {x.currency}</div>
-                  <div className="text-sm">{x.date} • {x.category || "-"} • {x.merchant || "-"}</div>
+              <div className="flex items-center justify-between gap-3">
+                <a href={`/expenses/${x.id}`} className="flex-1 min-w-0 group">
+                  <div className="font-semibold text-sm group-hover:underline">{x.amount} {x.currency}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+                    {x.date}<span className="mx-1.5">&middot;</span>{x.category || "-"}<span className="mx-1.5">&middot;</span>{x.merchant || "-"}
+                  </div>
                 </a>
-                <div className="flex gap-3">
-                  <button className="text-sm rounded-lg px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={() => startEdit(x)}>Edit</button>
-                  <button className="text-sm text-red-600 rounded-lg px-3 py-1.5 hover:bg-red-50 dark:hover:bg-red-950 transition" onClick={() => del(x.id)}>Delete</button>
+                <div className="flex gap-1 shrink-0">
+                  <button className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80" style={{ background: "var(--accent-light)", color: "var(--accent)" }} onClick={() => startEdit(x)}>Edit</button>
+                  <button className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80" style={{ background: "var(--danger-light)", color: "var(--danger)" }} onClick={() => del(x.id)}>Delete</button>
                 </div>
               </div>
             )}
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

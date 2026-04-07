@@ -150,58 +150,71 @@ function SubscriptionsContent() {
 
 
 
+  const inputStyle = { background: "var(--background)", border: "1px solid var(--card-border)" };
+
   return (
-    <div className="p-4 sm:p-8 space-y-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold">Subscriptions</h1>
-      {error && <p className="text-red-600 text-sm bg-red-50 dark:bg-red-950 rounded-lg p-3">{error}</p>}
+    <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold tracking-tight">Subscriptions</h1>
+      {error && <p className="text-sm rounded-xl p-3" style={{ background: "var(--danger-light)", color: "var(--danger)" }}>{error}</p>}
 
-      <div className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-start">
-        <input className="border rounded-lg px-3 py-2 text-sm sm:col-span-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700"
-          placeholder="Price"
-          inputMode="decimal"
-          value={form.price}
-          onChange={(e) => {
-            // Allow empty, digits, optional single dot; strip leading zeros gracefully
-            let v = e.target.value;
-            if (v === "") return setForm({ ...form, price: "" });
-            // Keep only digits and at most one dot
-            v = v.replace(/[^0-9.]/g, "");
-            const parts = v.split(".");
-            if (parts.length > 2) {
-              v = parts[0] + "." + parts.slice(1).join("");
-            }
-            // Trim leading zeros unless immediately followed by dot or the value is just "0"
-            v = v.replace(/^0+(\d)/, "$1");
-            setForm({ ...form, price: v });
-          }}
-        />
-        <input className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700" placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
-        <select className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700" value={form.billing_cycle} onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}>
-          <option value="monthly">monthly</option>
-          <option value="yearly">yearly</option>
-          <option value="weekly">weekly</option>
-          <option value="custom">custom</option>
-        </select>
-        <input className="border rounded-lg px-3 py-2 text-sm sm:col-span-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700" placeholder="Billing day of month (1-31)" type="number" value={form.billing_day ?? ""} onChange={(e) => setForm({ ...form, billing_day: e.target.value ? Number(e.target.value) : undefined })} />
-        <div className="flex flex-col sm:col-span-1">
-          <input className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
-          <span className="text-[11px] text-gray-600 mt-1">Start date (used to seed next payment date).</span>
+      {/* Add form card */}
+      <div className="rounded-2xl p-5 shadow-sm space-y-4" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+        <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted)" }}>Add Subscription</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input className="rounded-xl px-3 py-2.5 text-sm outline-none sm:col-span-2" style={inputStyle} placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input
+            className="rounded-xl px-3 py-2.5 text-sm outline-none"
+            style={inputStyle}
+            placeholder="Price"
+            inputMode="decimal"
+            value={form.price}
+            onChange={(e) => {
+              let v = e.target.value;
+              if (v === "") return setForm({ ...form, price: "" });
+              v = v.replace(/[^0-9.]/g, "");
+              const parts = v.split(".");
+              if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
+              v = v.replace(/^0+(\d)/, "$1");
+              setForm({ ...form, price: v });
+            }}
+          />
+          <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+          <select className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} value={form.billing_cycle} onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+            <option value="weekly">Weekly</option>
+            <option value="custom">Custom</option>
+          </select>
+          <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Billing day (1-31)" type="number" value={form.billing_day ?? ""} onChange={(e) => setForm({ ...form, billing_day: e.target.value ? Number(e.target.value) : undefined })} />
+          <div className="flex flex-col">
+            <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+            <span className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>Start date</span>
+          </div>
         </div>
+        <button
+          className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+          style={{ background: "var(--accent)" }}
+          onClick={create}
+          disabled={busy}
+        >{busy ? "Adding\u2026" : "Add Subscription"}</button>
       </div>
-      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50" onClick={create} disabled={busy}>{busy ? "Adding…" : "Add"}</button>
 
-      {items.length === 0 && !error && <p className="text-sm text-gray-500">No subscriptions yet. Add one above.</p>}
-      <ul className="space-y-2">
+      {/* List */}
+      {items.length === 0 && !error && (
+        <div className="text-center py-12 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>No subscriptions yet. Add one above.</p>
+        </div>
+      )}
+      <div className="space-y-3">
         {items.map((s) => (
-          <li key={s.id} className="border rounded-lg p-3 dark:border-gray-800">
+          <div key={s.id} className="rounded-2xl p-4 shadow-sm transition-all" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             {editId === s.id ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                  <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
                   <input
-                    className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700"
+                    className="rounded-xl px-3 py-2 text-sm outline-none"
+                    style={inputStyle}
                     inputMode="decimal"
                     value={editForm.price}
                     onChange={(e) => {
@@ -209,42 +222,43 @@ function SubscriptionsContent() {
                       if (v === "") return setEditForm({ ...editForm, price: "" });
                       v = v.replace(/[^0-9.]/g, "");
                       const parts = v.split(".");
-                      if (parts.length > 2) {
-                        v = parts[0] + "." + parts.slice(1).join("");
-                      }
+                      if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join("");
                       v = v.replace(/^0+(\d)/, "$1");
                       setEditForm({ ...editForm, price: v });
                     }}
                   />
-                  <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
-                  <select className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" value={editForm.billing_cycle} onChange={(e) => setEditForm({ ...editForm, billing_cycle: e.target.value })}>
-                    <option value="monthly">monthly</option>
-                    <option value="yearly">yearly</option>
-                    <option value="weekly">weekly</option>
-                    <option value="custom">custom</option>
+                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
+                  <select className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.billing_cycle} onChange={(e) => setEditForm({ ...editForm, billing_cycle: e.target.value })}>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="custom">Custom</option>
                   </select>
                 </div>
-                <div className="text-xs text-gray-600">Billing day is used for monthly cycles. Leave blank if not applicable.</div>
                 <div className="flex gap-2">
-                  <button className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition" onClick={saveEdit}>Save</button>
-                  <button className="px-3 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={cancelEdit}>Cancel</button>
+                  <button className="px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all" style={{ background: "var(--accent)" }} onClick={saveEdit}>Save</button>
+                  <button className="px-4 py-2 rounded-xl text-sm font-medium transition-all" style={{ color: "var(--muted)" }} onClick={cancelEdit}>Cancel</button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between">
-                <a href={`/subscriptions/${s.id}`} className="block">
-                  <div className="font-semibold underline">{s.name}</div>
-                  <div className="text-sm">{s.price} {s.currency} • {s.billing_cycle}</div>
+              <div className="flex items-center justify-between gap-3">
+                <a href={`/subscriptions/${s.id}`} className="flex-1 min-w-0 group">
+                  <div className="font-semibold text-sm group-hover:underline">{s.name}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
+                    <span className="font-medium" style={{ color: "var(--foreground)" }}>{s.price} {s.currency}</span>
+                    <span className="mx-1.5">&middot;</span>{s.billing_cycle}
+                    {s.next_payment_date && <><span className="mx-1.5">&middot;</span>Next: {s.next_payment_date}</>}
+                  </div>
                 </a>
-                <div className="flex gap-3">
-                  <button className="text-sm rounded-lg px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={() => startEdit(s)}>Edit</button>
-                  <button className="text-sm text-red-600 rounded-lg px-3 py-1.5 hover:bg-red-50 dark:hover:bg-red-950 transition" onClick={() => del(s.id)}>Delete</button>
+                <div className="flex gap-1 shrink-0">
+                  <button className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80" style={{ background: "var(--accent-light)", color: "var(--accent)" }} onClick={() => startEdit(s)}>Edit</button>
+                  <button className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80" style={{ background: "var(--danger-light)", color: "var(--danger)" }} onClick={() => del(s.id)}>Delete</button>
                 </div>
               </div>
             )}
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

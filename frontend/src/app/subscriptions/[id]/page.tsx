@@ -28,27 +28,36 @@ function SubscriptionDetailContent() {
       .catch((e) => setError(String(e)));
   }, [user, id]);
 
-  if (error) return <div className="p-8 text-red-600">{error}</div>;
+  if (error) return <div className="p-8" style={{ color: "var(--danger)" }}>{error}</div>;
   if (!data) return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: "var(--accent)" }} />
     </div>
   );
 
+  const rows = [
+    ["Price", `${data.price} ${data.currency}`],
+    ["Cycle", data.billing_cycle],
+    data.billing_day && ["Billing day", data.billing_day],
+    data.start_date && ["Start date", data.start_date],
+    data.next_payment_date && ["Next payment", data.next_payment_date],
+    data.payment_method && ["Payment method", data.payment_method],
+    ["Active", String(data.active)],
+    data.category && ["Category", data.category],
+    data.notes && ["Notes", data.notes],
+  ].filter(Boolean) as [string, string][];
+
   return (
     <div className="p-4 sm:p-8 space-y-4 max-w-xl mx-auto">
-      <button className="text-sm rounded-lg px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={() => router.back()}>&larr; Back</button>
-      <h1 className="text-2xl font-bold">{data.name}</h1>
-      <div className="space-y-2 border rounded-lg p-4 dark:border-gray-800">
-        <div className="flex justify-between"><span className="text-gray-500">Price</span><span>{data.price} {data.currency}</span></div>
-        <div className="flex justify-between"><span className="text-gray-500">Cycle</span><span>{data.billing_cycle}</span></div>
-        {data.billing_day && <div className="flex justify-between"><span className="text-gray-500">Billing day</span><span>{data.billing_day}</span></div>}
-        {data.start_date && <div className="flex justify-between"><span className="text-gray-500">Start date</span><span>{data.start_date}</span></div>}
-        {data.next_payment_date && <div className="flex justify-between"><span className="text-gray-500">Next payment</span><span>{data.next_payment_date}</span></div>}
-        {data.payment_method && <div className="flex justify-between"><span className="text-gray-500">Payment method</span><span>{data.payment_method}</span></div>}
-        <div className="flex justify-between"><span className="text-gray-500">Active</span><span>{String(data.active)}</span></div>
-        {data.category && <div className="flex justify-between"><span className="text-gray-500">Category</span><span>{data.category}</span></div>}
-        {data.notes && <div className="flex justify-between"><span className="text-gray-500">Notes</span><span>{data.notes}</span></div>}
+      <button className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:opacity-80" style={{ background: "var(--accent-light)", color: "var(--accent)" }} onClick={() => router.back()}>&larr; Back</button>
+      <h1 className="text-2xl font-bold tracking-tight">{data.name}</h1>
+      <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+        {rows.map(([label, value], i) => (
+          <div key={label} className="flex justify-between px-5 py-3 text-sm" style={i < rows.length - 1 ? { borderBottom: "1px solid var(--card-border)" } : {}}>
+            <span style={{ color: "var(--muted)" }}>{label}</span>
+            <span className="font-medium">{value}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

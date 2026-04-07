@@ -32,12 +32,12 @@ export default function StartupOverlay() {
   if (ready) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-white dark:bg-gray-950 flex flex-col items-center justify-center gap-4">
-      <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600" />
-      <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-4" style={{ background: "var(--background)" }}>
+      <div className="animate-spin rounded-full h-12 w-12 border-4" style={{ borderColor: "var(--accent-light)", borderTopColor: "var(--accent)" }} />
+      <p className="text-lg font-medium" style={{ color: "var(--foreground)" }}>
         App is starting&hellip;
       </p>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm" style={{ color: "var(--muted)" }}>
         Please wait while the server wakes up.
       </p>
     </div>
