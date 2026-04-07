@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/Toast";
 import { apiJson } from "@/lib/http";
-import { getMe } from "@/lib/auth";
+import { useSession } from "@/lib/session";
+import AuthGuard from "@/components/AuthGuard";
 
 type Notification = {
   id: string;
@@ -14,17 +15,21 @@ type Notification = {
 };
 
 export default function NotificationsPage() {
-  const [me, setMe] = useState<any | null>(null);
+  return (
+    <AuthGuard>
+      <NotificationsContent />
+    </AuthGuard>
+  );
+}
+
+function NotificationsContent() {
+  const { user } = useSession();
   const [items, setItems] = useState<Notification[]>([]);
   const [error, setError] = useState<string>("");
   const { push } = useToast();
 
-  useEffect(() => {
-    getMe().then(setMe).catch(() => setMe(null));
-  }, []);
-
   const load = async () => {
-    if (!me) return;
+    if (!user) return;
     setError("");
     try {
       const data = await apiJson<Notification[]>(`/api/v1/notifications`);
@@ -34,10 +39,10 @@ export default function NotificationsPage() {
     }
   };
 
-  useEffect(() => { load(); }, [me]);
+  useEffect(() => { load(); }, [user]);
 
   const markRead = async (ids: string[]) => {
-    if (!me || ids.length === 0) return;
+    if (!user || ids.length === 0) return;
     try {
       await apiJson(`/api/v1/notifications/mark-read`, {
         method: "POST",
@@ -52,33 +57,31 @@ export default function NotificationsPage() {
     }
   };
 
-  if (me === null && items.length === 0 && !error) return <div className="p-8">Loading...</div>;
-  if (!me) return <div className="p-8">Please log in first.</div>;
-
   return (
-    <div className="p-8 space-y-4 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-8 space-y-4 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold">Notifications</h1>
-      {error && <p className="text-red-600 whitespace-pre-wrap">{error}</p>}
+      {error && <p className="text-red-600 text-sm bg-red-50 dark:bg-red-950 rounded-lg p-3">{error}</p>}
       <div className="space-y-2">
+        {items.length === 0 && <p className="text-sm text-gray-500 text-center py-8">No notifications</p>}
         {items.map((n) => (
-          <div key={n.id} className={`border p-3 rounded ${n.read ? "opacity-60" : ""}`}>
+          <div key={n.id} className={`border rounded-lg p-3 dark:border-gray-800 ${n.read ? "opacity-60" : ""}`}>
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-semibold">{n.type}</div>
-                <div className="text-xs text-gray-600">{new Date(n.created_at).toLocaleString()}</div>
+                <div className="font-semibold text-sm">{n.type}</div>
+                <div className="text-xs text-gray-500">{new Date(n.created_at).toLocaleString()}</div>
                 {n.payload && (
-                  <pre className="text-xs bg-gray-50 p-2 rounded mt-1 overflow-auto">{JSON.stringify(n.payload, null, 2)}</pre>
+                  <pre className="text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded-lg mt-1 overflow-auto">{JSON.stringify(n.payload, null, 2)}</pre>
                 )}
               </div>
               {!n.read && (
-                <button className="text-sm underline" onClick={() => markRead([n.id])}>Mark read</button>
+                <button className="text-sm rounded-lg px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition" onClick={() => markRead([n.id])}>Mark read</button>
               )}
             </div>
           </div>
         ))}
       </div>
       {items.some((i) => !i.read) && (
-        <button className="px-3 py-1 text-sm bg-blue-600 text-white" onClick={() => markRead(items.filter(i => !i.read).map(i => i.id))}>
+        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition" onClick={() => markRead(items.filter(i => !i.read).map(i => i.id))}>
           Mark all read
         </button>
       )}

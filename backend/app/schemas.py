@@ -82,3 +82,31 @@ class NotificationOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class VaultEntryCreate(BaseModel):
+    site_name: str = Field(min_length=1)
+    site_url: Optional[str] = None
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
+    notes: Optional[str] = None
+
+
+class VaultEntryUpdate(BaseModel):
+    site_name: Optional[str] = None
+    site_url: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class VaultEntryOut(BaseModel):
+    id: UUID
+    site_name: str
+    site_url: Optional[str] = None
+    username: str
+    password: str
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True

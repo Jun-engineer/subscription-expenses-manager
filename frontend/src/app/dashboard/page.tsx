@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { apiJson } from "@/lib/http";
 import { useSession } from "@/lib/session";
-import { useRouter } from "next/navigation";
+import AuthGuard from "@/components/AuthGuard";
 
 type Dashboard = {
   month: string;
@@ -18,8 +18,15 @@ function ym(date: Date) {
 }
 
 export default function DashboardPage() {
-  const { user, loading } = useSession();
-  const router = useRouter();
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
+  );
+}
+
+function DashboardContent() {
+  const { user } = useSession();
   const [month, setMonth] = useState<string>(ym(new Date()));
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string>("");
@@ -37,44 +44,35 @@ export default function DashboardPage() {
     return Number((data.subscription_total + data.variable_total).toFixed(2));
   }, [data]);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/");
-    }
-  }, [loading, user, router]);
-
-  if (loading) return <div className="p-8">Loading...</div>;
-  if (!user) return <div className="p-8">Redirecting...</div>;
-
   return (
-    <div className="p-8 space-y-6 max-w-3xl mx-auto">
-  <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="p-4 sm:p-8 space-y-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
 
       <div className="flex items-center gap-2">
-        <label className="text-sm">Month:</label>
+        <label className="text-sm font-medium">Month:</label>
         <input
-          className="border p-2"
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700"
           type="month"
           value={month}
           onChange={(e) => setMonth(e.target.value)}
         />
       </div>
 
-      {error && <p className="text-red-600 whitespace-pre-wrap">{error}</p>}
+      {error && <p className="text-red-600 text-sm bg-red-50 dark:bg-red-950 rounded-lg p-3">{error}</p>}
 
     {data && (
         <div className="space-y-6">
-  <p className="text-sm text-gray-600">Metrics below reflect the selected month ({data.month}). Subscription total counts actual scheduled charges within that month (based on start date, billing day, cycle, and interval).</p>
+  <p className="text-sm text-gray-500">Metrics for {data.month}. Subscription total counts actual scheduled charges within that month.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="border p-4 rounded">
+            <div className="border rounded-lg p-4 dark:border-gray-800">
               <div className="text-sm text-gray-500">Subscription Total</div>
               <div className="text-xl font-semibold">{data.subscription_total.toFixed(2)}</div>
             </div>
-            <div className="border p-4 rounded">
+            <div className="border rounded-lg p-4 dark:border-gray-800">
               <div className="text-sm text-gray-500">Variable Total</div>
               <div className="text-xl font-semibold">{data.variable_total.toFixed(2)}</div>
             </div>
-            <div className="border p-4 rounded">
+            <div className="border rounded-lg p-4 dark:border-gray-800">
               <div className="text-sm text-gray-500">Month Total</div>
               <div className="text-xl font-semibold">{total.toFixed(2)}</div>
             </div>
@@ -87,7 +85,7 @@ export default function DashboardPage() {
             ) : (
               <ul className="space-y-1">
                 {Object.entries(data.breakdown).map(([k, v]) => (
-                  <li key={k} className="flex justify-between border p-2 rounded">
+                  <li key={k} className="flex justify-between border rounded-lg p-3 dark:border-gray-800">
                     <span>{k}</span>
                     <span>{v.toFixed(2)}</span>
                   </li>
@@ -103,13 +101,9 @@ export default function DashboardPage() {
             ) : (
               <ul className="space-y-1">
                 {data.upcoming_payments.map((u) => (
-                  <li key={u.id} className="flex justify-between border p-2 rounded">
-                    <span>
-                      {u.name}
-                    </span>
-                    <span>
-                      {u.amount.toFixed(2)} • {u.date}
-                    </span>
+                  <li key={u.id} className="flex justify-between border rounded-lg p-3 dark:border-gray-800">
+                    <span>{u.name}</span>
+                    <span>{u.amount.toFixed(2)} &middot; {u.date}</span>
                   </li>
                 ))}
               </ul>

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # Feature flags / ops
     enable_celery: bool = True  # disable in Cloud Run if using scheduler + HTTP endpoint
     maintenance_key: Optional[str] = None  # if set, required in X-Maintenance-Key header for maintenance endpoints
+    vault_key: Optional[str] = None  # Fernet key for vault encryption; auto-derived from secret_key if not set
 
     # Optional envs, used by other modules but defined here to avoid extras errors
     database_url: Optional[str] = None
