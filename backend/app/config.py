@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     cors_origins: Optional[str] = None  # comma-separated list (CORS_ORIGINS)
 
     # Cookie settings for production deployments
-    cookie_secure: bool = True  # requires HTTPS; override to False for local dev
+    cookie_secure: bool = False  # set COOKIE_SECURE=true in production (enables SECRET_KEY enforcement)
     cookie_samesite: str = "lax"  # "lax" (dev) or "none" (cross-site) or "strict"
     cookie_domain: Optional[str] = None  # e.g., .yourdomain.com if using subdomains
 
