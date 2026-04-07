@@ -8,9 +8,13 @@ import AuthGuard from "@/components/AuthGuard";
 type CurrencyTotal = { subscriptions: number; expenses: number; total: number };
 type Dashboard = {
   month: string;
-  totals_by_currency: Record<string, CurrencyTotal>;
-  breakdown_by_currency: Record<string, Record<string, number>>;
-  upcoming_payments: { id: string; name: string; amount: number; currency: string; date: string }[];
+  totals_by_currency?: Record<string, CurrencyTotal>;
+  breakdown_by_currency?: Record<string, Record<string, number>>;
+  // Legacy fields from old backend
+  subscription_total?: number;
+  variable_total?: number;
+  breakdown?: Record<string, number>;
+  upcoming_payments: { id: string; name: string; amount: number; currency?: string; date: string }[];
 };
 
 function fmt(amount: number, currency: string) {
@@ -47,7 +51,24 @@ function DashboardContent() {
       .catch((e) => setError(String(e)));
   }, [user, month]);
 
-  const currencies = data ? Object.keys(data.totals_by_currency).sort() : [];
+  // Normalize: support both new (per-currency) and legacy (flat) backend responses
+  let totals: Record<string, CurrencyTotal> = {};
+  let breakdowns: Record<string, Record<string, number>> = {};
+  if (data) {
+    if (data.totals_by_currency) {
+      totals = data.totals_by_currency;
+    } else if (data.subscription_total !== undefined || data.variable_total !== undefined) {
+      const s = data.subscription_total ?? 0;
+      const e = data.variable_total ?? 0;
+      totals = { JPY: { subscriptions: s, expenses: e, total: s + e } };
+    }
+    if (data.breakdown_by_currency) {
+      breakdowns = data.breakdown_by_currency;
+    } else if (data.breakdown) {
+      breakdowns = { JPY: data.breakdown };
+    }
+  }
+  const currencies = Object.keys(totals).sort();
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-4xl mx-auto">
@@ -76,7 +97,7 @@ function DashboardContent() {
               <p className="text-sm" style={{ color: "var(--muted)" }}>No data this month</p>
             </div>
           ) : currencies.map((cur) => {
-            const t = data.totals_by_currency[cur];
+            const t = totals[cur];
             return (
               <div key={cur}>
                 <h2 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--muted)" }}>{cur}</h2>
@@ -103,11 +124,11 @@ function DashboardContent() {
           {/* Category Breakdown */}
           <div className="rounded-2xl p-5 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--muted)" }}>Category Breakdown</h2>
-            {Object.keys(data.breakdown_by_currency).length === 0 ? (
+            {Object.keys(breakdowns).length === 0 ? (
               <p className="text-sm py-4 text-center" style={{ color: "var(--muted)" }}>No expense data this month</p>
             ) : (
               <div className="space-y-4">
-                {Object.entries(data.breakdown_by_currency).sort(([a], [b]) => a.localeCompare(b)).map(([cur, cats]) => {
+                {Object.entries(breakdowns).sort(([a], [b]) => a.localeCompare(b)).map(([cur, cats]) => {
                   const curTotal = Object.values(cats).reduce((a, b) => a + b, 0);
                   return (
                     <div key={cur}>
@@ -146,7 +167,7 @@ function DashboardContent() {
                   <div key={u.id} className="flex items-center justify-between py-2 border-b last:border-b-0" style={{ borderColor: "var(--card-border)" }}>
                     <span className="font-medium text-sm">{u.name}</span>
                     <div className="text-right">
-                      <span className="text-sm font-semibold">{fmt(u.amount, u.currency)}</span>
+                      <span className="text-sm font-semibold">{fmt(u.amount, u.currency || "JPY")}</span>
                       <span className="text-xs ml-2" style={{ color: "var(--muted)" }}>{u.date}</span>
                     </div>
                   </div>
