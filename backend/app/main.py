@@ -1,11 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi import Depends
 from .db import db_ping, engine
 from .config import settings
-from .models import Base, User
-from .deps import get_current_user
+from .models import Base
 from . import routers_auth, routers_subscriptions, routers_expenses, routers_notifications, routers_dashboard, routers_maintenance, routers_vault
 import logging
 
@@ -61,7 +59,7 @@ def health():
     return {"status": "ok"}
 
 @app.get("/db-check")
-def db_check(user: User = Depends(get_current_user)):
+def db_check():
     try:
         ok = db_ping() == 1
         return {"db": "ok" if ok else "fail"}
