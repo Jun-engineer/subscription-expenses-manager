@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="108" fill="#6366f1"/>
+  <rect x="24" y="24" width="464" height="464" rx="88" fill="#6366f1"/>
+  <!-- Card shape -->
+  <rect x="96" y="160" width="320" height="200" rx="24" fill="white" opacity="0.95"/>
+  <!-- Card stripe -->
+  <rect x="96" y="160" width="320" height="56" rx="24" fill="white" opacity="0.3"/>
+  <rect x="96" y="192" width="320" height="24" fill="#4f46e5"/>
+  <!-- Chip -->
+  <rect x="136" y="248" width="56" height="40" rx="8" fill="#a5b4fc" opacity="0.8"/>
+  <rect x="148" y="258" width="32" height="20" rx="4" fill="#6366f1" opacity="0.5"/>
+  <!-- Dollar sign -->
+  <circle cx="340" cy="290" r="36" fill="#eef2ff"/>
+  <text x="340" y="304" text-anchor="middle" font-family="system-ui,-apple-system,sans-serif" font-size="44" font-weight="700" fill="#6366f1">$</text>
+  <!-- Bottom bar = subscriptions -->
+  <rect x="136" y="316" width="80" height="8" rx="4" fill="#c7d2fe"/>
+  <rect x="228" y="316" width="56" height="8" rx="4" fill="#c7d2fe"/>
+  <!-- Shield / lock for vault -->
+  <path d="M256 80 L296 100 V136 C296 168 280 196 256 208 C232 196 216 168 216 136 V100 Z" fill="white" opacity="0.2"/>
+  <path d="M256 96 L288 112 V140 C288 164 276 184 256 194 C236 184 224 164 224 140 V112 Z" fill="white" opacity="0.15"/>
+</svg>

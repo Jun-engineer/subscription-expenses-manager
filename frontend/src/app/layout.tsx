@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
@@ -16,9 +16,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#030712" },
+  ],
+};
+
 export const metadata: Metadata = {
-  title: "Subscription & Expense Manager",
-  description: "Track subscriptions, expenses, and passwords in one place",
+  title: {
+    default: "SubManager",
+    template: "%s | SubManager",
+  },
+  description: "Track recurring subscriptions, one-off expenses, and securely store credentials — all in one place.",
+  manifest: "/manifest.json",
+  openGraph: {
+    title: "SubManager",
+    description: "Track subscriptions, expenses & passwords in one place.",
+    siteName: "SubManager",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

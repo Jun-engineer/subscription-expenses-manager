@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { useSession } from "@/lib/session";
 import { useRouter } from "next/navigation";
 import { API } from "@/lib/auth";
+import { parseApiError } from "@/lib/http";
 
 export default function Home() {
   const { user, loading, login } = useSession();
   const router = useRouter();
+  const [tab, setTab] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string>("");
   const [busy, setBusy] = useState(false);
 
@@ -19,31 +22,48 @@ export default function Home() {
     }
   }, [loading, user, router]);
 
+  const validate = (): string | null => {
+    if (!email.trim()) return "Email is required.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Please enter a valid email address.";
+    if (!password) return "Password is required.";
+    if (password.length < 8) return "Password must be at least 8 characters.";
+    return null;
+  };
+
   const signup = async () => {
+    const err = validate();
+    if (err) { setError(err); return; }
     setError("");
     setBusy(true);
     try {
       const res = await fetch(`${API}/api/v1/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          display_name: displayName.trim() || undefined,
+        }),
       });
       if (!res.ok) throw new Error(await res.text());
-      alert("Signup success. Now login.");
+      // Auto-login after signup
+      await login(email, password);
     } catch (e: any) {
-      setError(e.message || String(e));
+      setError(parseApiError(e));
     } finally {
       setBusy(false);
     }
   };
 
   const doLogin = async () => {
+    const err = validate();
+    if (err) { setError(err); return; }
     setError("");
     setBusy(true);
     try {
       await login(email, password);
     } catch (e: any) {
-      setError(e.message || String(e));
+      setError(parseApiError(e));
     } finally {
       setBusy(false);
     }
@@ -79,6 +99,26 @@ export default function Home() {
         </div>
 
         <div className="rounded-2xl p-6 space-y-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+          {/* Tabs */}
+          <div className="flex rounded-xl overflow-hidden" style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}>
+            <button
+              className="flex-1 py-2 text-sm font-semibold transition-all"
+              style={{
+                background: tab === "login" ? "var(--accent)" : "transparent",
+                color: tab === "login" ? "white" : "var(--muted)",
+              }}
+              onClick={() => { setTab("login"); setError(""); }}
+            >Log in</button>
+            <button
+              className="flex-1 py-2 text-sm font-semibold transition-all"
+              style={{
+                background: tab === "signup" ? "var(--accent)" : "transparent",
+                color: tab === "signup" ? "white" : "var(--muted)",
+              }}
+              onClick={() => { setTab("signup"); setError(""); }}
+            >Sign up</button>
+          </div>
+
           <div className="space-y-3">
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Email</label>
@@ -91,9 +131,24 @@ export default function Home() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && doLogin()}
+                onKeyDown={(e) => e.key === "Enter" && (tab === "login" ? doLogin() : signup())}
               />
             </div>
+            {tab === "signup" && (
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Display name <span style={{ color: "var(--muted)", opacity: 0.6 }}>(optional)</span></label>
+                <input
+                  className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
+                  style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "var(--accent)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "var(--card-border)"}
+                  placeholder="How you'd like to be called"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && signup()}
+                />
+              </div>
+            )}
             <div>
               <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Password</label>
               <input
@@ -105,33 +160,23 @@ export default function Home() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && doLogin()}
+                onKeyDown={(e) => e.key === "Enter" && (tab === "login" ? doLogin() : signup())}
               />
             </div>
           </div>
 
-          <div className="flex gap-3 pt-1">
-            <button
-              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
-              style={{ border: "1px solid var(--accent)", color: "var(--accent)", background: "transparent" }}
-              onClick={signup}
-              disabled={busy}
-            >
-              Sign up
-            </button>
-            <button
-              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
-              style={{ background: "var(--accent)" }}
-              onClick={doLogin}
-              disabled={busy}
-            >
-              Log in
-            </button>
-          </div>
+          <button
+            className="w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+            style={{ background: "var(--accent)" }}
+            onClick={tab === "login" ? doLogin : signup}
+            disabled={busy}
+          >
+            {busy ? (tab === "login" ? "Logging in\u2026" : "Creating account\u2026") : (tab === "login" ? "Log in" : "Create account")}
+          </button>
         </div>
 
         {error && (
-          <p className="text-sm rounded-xl p-3 whitespace-pre-wrap" style={{ background: "var(--danger-light)", color: "var(--danger)" }}>
+          <p className="text-sm rounded-xl p-3" style={{ background: "var(--danger-light)", color: "var(--danger)" }}>
             {error}
           </p>
         )}
