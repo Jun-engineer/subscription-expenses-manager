@@ -1,17 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { apiJson } from "@/lib/http";
 import { useSession } from "@/lib/session";
 import AuthGuard from "@/components/AuthGuard";
 
+type CurrencyTotal = { subscriptions: number; expenses: number; total: number };
 type Dashboard = {
   month: string;
-  subscription_total: number;
-  variable_total: number;
-  breakdown: Record<string, number>;
-  upcoming_payments: { id: string; name: string; amount: number; date: string }[];
+  totals_by_currency: Record<string, CurrencyTotal>;
+  breakdown_by_currency: Record<string, Record<string, number>>;
+  upcoming_payments: { id: string; name: string; amount: number; currency: string; date: string }[];
 };
+
+function fmt(amount: number, currency: string) {
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+}
 
 function ym(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -39,10 +47,7 @@ function DashboardContent() {
       .catch((e) => setError(String(e)));
   }, [user, month]);
 
-  const total = useMemo(() => {
-    if (!data) return 0;
-    return Number((data.subscription_total + data.variable_total).toFixed(2));
-  }, [data]);
+  const currencies = data ? Object.keys(data.totals_by_currency).sort() : [];
 
   return (
     <div className="p-4 sm:p-8 space-y-6 max-w-4xl mx-auto">
@@ -65,41 +70,63 @@ function DashboardContent() {
         <div className="space-y-6">
           <p className="text-sm" style={{ color: "var(--muted)" }}>Showing metrics for {data.month}</p>
 
-          {/* Summary cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              { label: "Subscriptions", value: data.subscription_total, color: "var(--accent)" },
-              { label: "Variable", value: data.variable_total, color: "var(--success)" },
-              { label: "Total", value: total, color: "var(--foreground)" },
-            ].map((card) => (
-              <div
-                key={card.label}
-                className="rounded-2xl p-5 shadow-sm"
-                style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}
-              >
-                <div className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: "var(--muted)" }}>{card.label}</div>
-                <div className="text-2xl font-bold" style={{ color: card.color }}>{card.value.toFixed(2)}</div>
+          {/* Per-currency summary cards */}
+          {currencies.length === 0 ? (
+            <div className="text-center py-8 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>No data this month</p>
+            </div>
+          ) : currencies.map((cur) => {
+            const t = data.totals_by_currency[cur];
+            return (
+              <div key={cur}>
+                <h2 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--muted)" }}>{cur}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { label: "Subscriptions", value: t.subscriptions, color: "var(--accent)" },
+                    { label: "Expenses", value: t.expenses, color: "var(--success)" },
+                    { label: "Total", value: t.total, color: "var(--foreground)" },
+                  ].map((card) => (
+                    <div
+                      key={card.label}
+                      className="rounded-2xl p-5 shadow-sm"
+                      style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}
+                    >
+                      <div className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: "var(--muted)" }}>{card.label}</div>
+                      <div className="text-2xl font-bold" style={{ color: card.color }}>{fmt(card.value, cur)}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
 
           {/* Category Breakdown */}
           <div className="rounded-2xl p-5 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--muted)" }}>Category Breakdown</h2>
-            {Object.keys(data.breakdown).length === 0 ? (
+            {Object.keys(data.breakdown_by_currency).length === 0 ? (
               <p className="text-sm py-4 text-center" style={{ color: "var(--muted)" }}>No expense data this month</p>
             ) : (
-              <div className="space-y-2">
-                {Object.entries(data.breakdown).map(([k, v]) => {
-                  const pct = total > 0 ? (v / total) * 100 : 0;
+              <div className="space-y-4">
+                {Object.entries(data.breakdown_by_currency).sort(([a], [b]) => a.localeCompare(b)).map(([cur, cats]) => {
+                  const curTotal = Object.values(cats).reduce((a, b) => a + b, 0);
                   return (
-                    <div key={k}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>{k}</span>
-                        <span className="font-medium">{v.toFixed(2)}</span>
-                      </div>
-                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--card-border)" }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%`, background: "var(--accent)" }} />
+                    <div key={cur}>
+                      <h3 className="text-xs font-medium mb-2" style={{ color: "var(--muted)" }}>{cur}</h3>
+                      <div className="space-y-2">
+                        {Object.entries(cats).map(([k, v]) => {
+                          const pct = curTotal > 0 ? (v / curTotal) * 100 : 0;
+                          return (
+                            <div key={k}>
+                              <div className="flex justify-between text-sm mb-1">
+                                <span>{k}</span>
+                                <span className="font-medium">{fmt(v, cur)}</span>
+                              </div>
+                              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--card-border)" }}>
+                                <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(pct, 100)}%`, background: "var(--accent)" }} />
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -119,7 +146,7 @@ function DashboardContent() {
                   <div key={u.id} className="flex items-center justify-between py-2 border-b last:border-b-0" style={{ borderColor: "var(--card-border)" }}>
                     <span className="font-medium text-sm">{u.name}</span>
                     <div className="text-right">
-                      <span className="text-sm font-semibold">{u.amount.toFixed(2)}</span>
+                      <span className="text-sm font-semibold">{fmt(u.amount, u.currency)}</span>
                       <span className="text-xs ml-2" style={{ color: "var(--muted)" }}>{u.date}</span>
                     </div>
                   </div>

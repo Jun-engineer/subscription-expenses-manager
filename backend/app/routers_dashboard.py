@@ -29,21 +29,23 @@ def month_bounds(month_str: str | None) -> tuple[date, date]:
 def dashboard(month: str | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     start, end = month_bounds(month)
 
-    # Variable expenses within month
-    variable_total = (
-        db.query(func.coalesce(func.sum(Expense.amount), 0))
+    # Variable expenses grouped by currency
+    expense_rows = (
+        db.query(Expense.currency, func.coalesce(func.sum(Expense.amount), 0))
         .filter(Expense.user_id == user.id, Expense.date >= start, Expense.date <= end)
-        .scalar()
+        .group_by(Expense.currency)
+        .all()
     )
+    expense_by_currency: dict[str, float] = {cur: float(amt) for cur, amt in expense_rows}
 
-    # Subscriptions active for user
+    # Subscriptions active for user, grouped by currency
     subs = (
         db.query(Subscription)
         .filter(Subscription.user_id == user.id, Subscription.active == True)  # noqa: E712
         .all()
     )
-    
-    subscription_total = 0.0
+
+    sub_by_currency: dict[str, float] = {}
     for s in subs:
         occurrences = count_occurrences_in_month(
             billing_cycle=s.billing_cycle,
@@ -53,16 +55,31 @@ def dashboard(month: str | None = None, db: Session = Depends(get_db), user: Use
             window_start=start,
             window_end=end,
         )
-        subscription_total += float(s.price) * occurrences
+        cur = s.currency or "JPY"
+        sub_by_currency[cur] = sub_by_currency.get(cur, 0.0) + float(s.price) * occurrences
 
-    # Expense category breakdown within month
-    rows = (
-        db.query(Expense.category, func.coalesce(func.sum(Expense.amount), 0))
+    # Build per-currency totals
+    all_currencies = sorted(set(list(sub_by_currency.keys()) + list(expense_by_currency.keys())))
+    totals_by_currency = {}
+    for cur in all_currencies:
+        s_total = round(sub_by_currency.get(cur, 0.0), 2)
+        e_total = round(expense_by_currency.get(cur, 0.0), 2)
+        totals_by_currency[cur] = {
+            "subscriptions": s_total,
+            "expenses": e_total,
+            "total": round(s_total + e_total, 2),
+        }
+
+    # Expense category breakdown grouped by currency
+    cat_rows = (
+        db.query(Expense.currency, Expense.category, func.coalesce(func.sum(Expense.amount), 0))
         .filter(Expense.user_id == user.id, Expense.date >= start, Expense.date <= end)
-        .group_by(Expense.category)
+        .group_by(Expense.currency, Expense.category)
         .all()
     )
-    breakdown = {k or "Uncategorized": float(v) for k, v in rows}
+    breakdown_by_currency: dict[str, dict[str, float]] = {}
+    for cur, cat, amt in cat_rows:
+        breakdown_by_currency.setdefault(cur, {})[cat or "Uncategorized"] = float(amt)
 
     # Upcoming payments: next 7 days from today (cross-month aware)
     today = date.today()
@@ -81,14 +98,14 @@ def dashboard(month: str | None = None, db: Session = Depends(get_db), user: Use
 
     return {
         "month": f"{start.year:04d}-{start.month:02d}",
-        "subscription_total": round(subscription_total, 2),
-        "variable_total": float(variable_total or 0),
-        "breakdown": breakdown,
+        "totals_by_currency": totals_by_currency,
+        "breakdown_by_currency": breakdown_by_currency,
         "upcoming_payments": [
             {
                 "id": str(u.id),
                 "name": u.name,
                 "amount": float(u.price),
+                "currency": u.currency,
                 "date": u.next_payment_date.isoformat() if u.next_payment_date else None,
             }
             for u in upcoming

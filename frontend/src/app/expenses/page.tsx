@@ -6,6 +6,8 @@ import { apiJson } from "@/lib/http";
 import { useSession } from "@/lib/session";
 import AuthGuard from "@/components/AuthGuard";
 
+const CURRENCIES = ["JPY","USD","EUR","GBP","AUD","CAD","CHF","KRW","SGD","NZD","HKD","CNY","TWD","THB","INR","MYR","PHP","IDR","SEK","NOK","DKK","BRL","MXN"] as const;
+
 type Expense = {
   id: string;
   date: string;
@@ -183,7 +185,7 @@ function ExpensesContent() {
               setForm({ ...form, amount: v });
             }}
           />
-          <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+          <select className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>{CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
           <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
           <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Merchant" value={form.merchant} onChange={(e) => setForm({ ...form, merchant: e.target.value })} />
           <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
@@ -224,7 +226,7 @@ function ExpensesContent() {
                       setEditForm({ ...editForm, amount: v });
                     }}
                   />
-                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
+                  <select className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })}>{CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
                   <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} placeholder="Category" />
                   <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.merchant} onChange={(e) => setEditForm({ ...editForm, merchant: e.target.value })} placeholder="Merchant" />
                   <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Notes" />

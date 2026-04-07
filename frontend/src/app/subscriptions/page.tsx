@@ -6,6 +6,8 @@ import { apiJson } from "@/lib/http";
 import { useSession } from "@/lib/session";
 import AuthGuard from "@/components/AuthGuard";
 
+const CURRENCIES = ["JPY","USD","EUR","GBP","AUD","CAD","CHF","KRW","SGD","NZD","HKD","CNY","TWD","THB","INR","MYR","PHP","IDR","SEK","NOK","DKK","BRL","MXN"] as const;
+
 type Subscription = {
   id: string;
   name: string;
@@ -178,7 +180,7 @@ function SubscriptionsContent() {
               setForm({ ...form, price: v });
             }}
           />
-          <input className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} placeholder="Currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} />
+          <select className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>{CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
           <select className="rounded-xl px-3 py-2.5 text-sm outline-none" style={inputStyle} value={form.billing_cycle} onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}>
             <option value="monthly">Monthly</option>
             <option value="yearly">Yearly</option>
@@ -227,7 +229,7 @@ function SubscriptionsContent() {
                       setEditForm({ ...editForm, price: v });
                     }}
                   />
-                  <input className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })} />
+                  <select className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.currency} onChange={(e) => setEditForm({ ...editForm, currency: e.target.value })}>{CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
                   <select className="rounded-xl px-3 py-2 text-sm outline-none" style={inputStyle} value={editForm.billing_cycle} onChange={(e) => setEditForm({ ...editForm, billing_cycle: e.target.value })}>
                     <option value="monthly">Monthly</option>
                     <option value="yearly">Yearly</option>
