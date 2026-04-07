@@ -74,3 +74,7 @@ CREATE TABLE IF NOT EXISTS vault_entries (
 );
 
 CREATE INDEX IF NOT EXISTS ix_vault_user_created ON vault_entries(user_id, created_at);
+CREATE INDEX IF NOT EXISTS ix_expenses_user_date ON expenses(user_id, date);
+CREATE INDEX IF NOT EXISTS ix_notifications_user_created ON notifications(user_id, created_at);
+CREATE INDEX IF NOT EXISTS ix_subscriptions_user_created ON subscriptions(user_id, created_at);
+CREATE INDEX IF NOT EXISTS ix_subscriptions_user_nextpay ON subscriptions(user_id, next_payment_date);

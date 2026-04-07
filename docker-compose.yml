@@ -33,11 +33,28 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   worker:
     build: ./backend
     env_file: ./backend/.env
     command: celery -A app.worker worker -l info
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+
+  worker-beat:
+    build: ./backend
+    env_file: ./backend/.env
+    command: celery -A app.worker beat -l info
     volumes:
       - ./backend/app:/app/app
     depends_on:

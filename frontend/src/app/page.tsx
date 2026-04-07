@@ -100,8 +100,10 @@ export default function Home() {
 
         <div className="rounded-2xl p-6 space-y-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           {/* Tabs */}
-          <div className="flex rounded-xl overflow-hidden" style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}>
+          <div className="flex rounded-xl overflow-hidden" role="tablist" style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}>
             <button
+              role="tab"
+              aria-selected={tab === "login"}
               className="flex-1 py-2 text-sm font-semibold transition-all"
               style={{
                 background: tab === "login" ? "var(--accent)" : "transparent",
@@ -110,6 +112,8 @@ export default function Home() {
               onClick={() => { setTab("login"); setError(""); }}
             >Log in</button>
             <button
+              role="tab"
+              aria-selected={tab === "signup"}
               className="flex-1 py-2 text-sm font-semibold transition-all"
               style={{
                 background: tab === "signup" ? "var(--accent)" : "transparent",
@@ -121,8 +125,9 @@ export default function Home() {
 
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Email</label>
+              <label htmlFor="email" className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Email</label>
               <input
+                id="email"
                 className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
                 style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}
                 onFocus={(e) => e.currentTarget.style.borderColor = "var(--accent)"}
@@ -136,8 +141,9 @@ export default function Home() {
             </div>
             {tab === "signup" && (
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Display name <span style={{ color: "var(--muted)", opacity: 0.6 }}>(optional)</span></label>
+                <label htmlFor="displayName" className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Display name <span style={{ color: "var(--muted)", opacity: 0.6 }}>(optional)</span></label>
                 <input
+                  id="displayName"
                   className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
                   style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}
                   onFocus={(e) => e.currentTarget.style.borderColor = "var(--accent)"}
@@ -150,8 +156,9 @@ export default function Home() {
               </div>
             )}
             <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Password</label>
+              <label htmlFor="password" className="block text-xs font-medium mb-1.5" style={{ color: "var(--muted)" }}>Password</label>
               <input
+                id="password"
                 className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
                 style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}
                 onFocus={(e) => e.currentTarget.style.borderColor = "var(--accent)"}

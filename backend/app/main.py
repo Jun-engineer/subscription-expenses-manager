@@ -1,15 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Depends
 from .db import db_ping, engine
 from .config import settings
-from .models import Base
+from .models import Base, User
+from .deps import get_current_user
 from . import routers_auth, routers_subscriptions, routers_expenses, routers_notifications, routers_dashboard, routers_maintenance, routers_vault
 import logging
 
 logger = logging.getLogger(__name__)
 
 if settings.secret_key == "change-me":
+    if settings.cookie_secure:
+        raise RuntimeError("SECRET_KEY must be set to a strong random value in production. "
+                           "Set SECRET_KEY in your .env file.")
     logger.warning("SECRET_KEY is set to the default 'change-me'. Set a strong secret in production!")
 
 app = FastAPI(title="Subscription & Expenses Manager API")
@@ -36,6 +41,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self' " + (settings.cors_origins or "") + "; "
+            "frame-ancestors 'none'"
+        )
         return response
 
 
@@ -47,12 +61,13 @@ def health():
     return {"status": "ok"}
 
 @app.get("/db-check")
-def db_check():
+def db_check(user: User = Depends(get_current_user)):
     try:
         ok = db_ping() == 1
         return {"db": "ok" if ok else "fail"}
     except Exception as e:
-        return {"db": "error", "detail": str(e)}
+        logger.error(f"db-check failed: {e}")
+        return {"db": "error"}
 
 
 # CORS
@@ -70,8 +85,8 @@ if origins:
 # Create metadata if not exists (tables are already created by init.sql, but safe for tests)
 try:
     Base.metadata.create_all(bind=engine)
-except Exception:
-    pass
+except Exception as e:
+    logger.error(f"Failed to create database tables: {e}")
 
 
 # Routers

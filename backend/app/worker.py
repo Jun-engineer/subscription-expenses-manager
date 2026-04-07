@@ -8,6 +8,7 @@ from .models import Subscription, Notification
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 celery_app = Celery("worker", broker=REDIS_URL, backend=REDIS_URL)
+celery_app.conf.result_expires = 3600  # clean up task results after 1 hour
 
 # Optional: enable beat for scheduled tasks if this process runs with 'celery -B'
 celery_app.conf.beat_schedule = {
@@ -16,10 +17,6 @@ celery_app.conf.beat_schedule = {
         "schedule": 24 * 60 * 60,  # daily
     }
 }
-
-@celery_app.task
-def add(x, y):
-    return x + y
 
 
 def _advance_next_payment(current: date, cycle: str, interval: int) -> date:

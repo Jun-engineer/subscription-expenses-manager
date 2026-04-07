@@ -26,10 +26,10 @@ export default function Nav() {
     if (!user) return;
     const load = async () => {
       try {
-        const res = await fetch(`${API}/api/v1/notifications`, { credentials: "include" });
+        const res = await fetch(`${API}/api/v1/notifications/unread-count`, { credentials: "include" });
         if (!res.ok) return;
-        const items = await res.json();
-        setUnread(items.filter((i: any) => !i.read).length);
+        const data = await res.json();
+        setUnread(data.count);
       } catch {}
     };
     load();

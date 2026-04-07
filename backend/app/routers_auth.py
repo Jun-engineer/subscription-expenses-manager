@@ -42,7 +42,7 @@ def _clear_auth_cookies(response: Response) -> None:
 @router.post("/signup", response_model=UserOut)
 def signup(payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
     user = User(email=payload.email, display_name=payload.display_name or payload.email.split("@")[0], password_hash=hash_password(payload.password))
     db.add(user)
     db.commit()
