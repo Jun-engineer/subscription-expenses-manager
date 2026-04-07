@@ -6,8 +6,9 @@ router = APIRouter(prefix="/api/v1/maintenance", tags=["maintenance"])
 
 @router.post("/compute-upcoming")
 def compute_upcoming_payments_endpoint(x_maintenance_key: str | None = Header(default=None)):
-    # Optional key check
-    if settings.maintenance_key and x_maintenance_key != settings.maintenance_key:
+    if not settings.maintenance_key:
+        raise HTTPException(status_code=403, detail="Maintenance key not configured")
+    if x_maintenance_key != settings.maintenance_key:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     # If Celery is enabled, trigger async; otherwise run inline

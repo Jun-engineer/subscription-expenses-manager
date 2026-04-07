@@ -31,6 +31,7 @@ function ExpensesContent() {
   const [start, setStart] = useState<string>("");
   const [end, setEnd] = useState<string>("");
   const { push } = useToast();
+  const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     date: new Date().toISOString().slice(0, 10),
     amount: "",
@@ -66,13 +67,14 @@ function ExpensesContent() {
   useEffect(() => { load(); }, [user]);
 
   const create = async () => {
-    if (!user) return;
+    if (!user || busy) return;
     setError("");
     const amountNum = Number((form.amount || "").toString().replace(/^0+(\d)/, "$1"));
     if (isNaN(amountNum) || amountNum <= 0) {
       push({ type: "error", message: "Amount must be positive" });
       return;
     }
+    setBusy(true);
     try {
       await apiJson(`/api/v1/expenses`, {
         method: "POST",
@@ -85,14 +87,18 @@ function ExpensesContent() {
     } catch (e: any) {
       setError(e.message || String(e));
       push({ type: "error", message: "Failed to add expense" });
+    } finally {
+      setBusy(false);
     }
   };
 
   const del = async (id: string) => {
     if (!user) return;
+    if (!confirm("Delete this expense?")) return;
     setError("");
     try {
       await apiJson(`/api/v1/expenses/${id}`, { method: "DELETE" });
+      push({ type: "success", message: "Expense deleted" });
       await load();
     } catch (e: any) {
       setError(e.message || String(e));
@@ -172,8 +178,9 @@ function ExpensesContent() {
         <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" placeholder="Merchant" value={form.merchant} onChange={(e) => setForm({ ...form, merchant: e.target.value })} />
         <input className="border rounded-lg px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700" placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
       </div>
-      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition" onClick={create}>Add</button>
+      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50" onClick={create} disabled={busy}>{busy ? "Adding…" : "Add"}</button>
 
+      {items.length === 0 && !error && <p className="text-sm text-gray-500">No expenses yet. Add one above.</p>}
       <ul className="space-y-2">
         {items.map((x) => (
           <li key={x.id} className="border rounded-lg p-3 dark:border-gray-800">

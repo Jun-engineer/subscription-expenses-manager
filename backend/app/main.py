@@ -5,6 +5,12 @@ from .db import db_ping, engine
 from .config import settings
 from .models import Base
 from . import routers_auth, routers_subscriptions, routers_expenses, routers_notifications, routers_dashboard, routers_maintenance, routers_vault
+import logging
+
+logger = logging.getLogger(__name__)
+
+if settings.secret_key == "change-me":
+    logger.warning("SECRET_KEY is set to the default 'change-me'. Set a strong secret in production!")
 
 app = FastAPI(title="Subscription & Expenses Manager API")
 

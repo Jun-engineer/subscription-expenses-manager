@@ -43,6 +43,7 @@ function SubscriptionsContent() {
     start_date: "",
   });
   const { push } = useToast();
+  const [busy, setBusy] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -65,40 +66,45 @@ function SubscriptionsContent() {
   useEffect(() => { load(); }, [user]);
 
   const create = async () => {
-    if (!user) return;
+    if (!user || busy) return;
     setError("");
-  const priceNum = Number((form.price || "").toString().replace(/^0+(\d)/, "$1"));
-  if (!form.name || isNaN(priceNum) || priceNum <= 0) {
+    const priceNum = Number((form.price || "").toString().replace(/^0+(\d)/, "$1"));
+    if (!form.name || isNaN(priceNum) || priceNum <= 0) {
       push({ type: "error", message: "Name and positive price are required." });
       return;
     }
+    setBusy(true);
     try {
       await apiJson(`/api/v1/subscriptions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
-      price: priceNum,
+          price: priceNum,
           currency: form.currency,
           billing_cycle: form.billing_cycle,
           billing_day: form.billing_day || undefined,
           start_date: form.start_date || undefined,
         }),
       });
-    setForm({ name: "", price: "", currency: "JPY", billing_cycle: "monthly", billing_day: undefined, start_date: "" });
+      setForm({ name: "", price: "", currency: "JPY", billing_cycle: "monthly", billing_day: undefined, start_date: "" });
       push({ type: "success", message: "Subscription added" });
       await load();
     } catch (e: any) {
       setError(e.message || String(e));
       push({ type: "error", message: "Failed to add subscription" });
+    } finally {
+      setBusy(false);
     }
   };
 
   const del = async (id: string) => {
     if (!user) return;
+    if (!confirm("Delete this subscription?")) return;
     setError("");
     try {
       await apiJson(`/api/v1/subscriptions/${id}`, { method: "DELETE" });
+      push({ type: "success", message: "Subscription deleted" });
       await load();
     } catch (e: any) {
       setError(e.message || String(e));
@@ -184,8 +190,9 @@ function SubscriptionsContent() {
           <span className="text-[11px] text-gray-600 mt-1">Start date (used to seed next payment date).</span>
         </div>
       </div>
-      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition" onClick={create}>Add</button>
+      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50" onClick={create} disabled={busy}>{busy ? "Adding…" : "Add"}</button>
 
+      {items.length === 0 && !error && <p className="text-sm text-gray-500">No subscriptions yet. Add one above.</p>}
       <ul className="space-y-2">
         {items.map((s) => (
           <li key={s.id} className="border rounded-lg p-3 dark:border-gray-800">

@@ -55,8 +55,9 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id),
-  token_hash TEXT NOT NULL,
+  token TEXT NOT NULL UNIQUE,
   expires_at TIMESTAMPTZ NOT NULL,
+  revoked BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

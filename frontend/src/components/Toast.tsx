@@ -10,7 +10,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const push = (t: Omit<Toast, "id">) => {
     const toast: Toast = { id: Date.now() + Math.random(), ...t };
     setItems((prev) => [...prev, toast]);
-    setTimeout(() => setItems((prev) => prev.filter((x) => x.id !== toast.id)), 3000);
+    setTimeout(() => setItems((prev) => prev.filter((x) => x.id !== toast.id)), t.type === "error" ? 5000 : 3000);
   };
   return (
     <ToastCtx.Provider value={{ push }}>
