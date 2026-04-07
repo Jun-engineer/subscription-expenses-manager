@@ -109,24 +109,19 @@ def me(user: User = Depends(get_current_user)):
 @router.delete("/account")
 def delete_account(response: Response, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     user_id = str(user.id)
-    # Best-effort: delete dependent rows explicitly to avoid FK constraint errors
     try:
         db.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete(synchronize_session=False)
-    except SQLAlchemyError:
-        db.rollback()
-    try:
         db.query(VaultEntry).filter(VaultEntry.user_id == user_id).delete(synchronize_session=False)
+        db.query(Notification).filter(Notification.user_id == user_id).delete(synchronize_session=False)
+        db.query(Subscription).filter(Subscription.user_id == user_id).delete(synchronize_session=False)
+        db.query(Expense).filter(Expense.user_id == user_id).delete(synchronize_session=False)
+        deleted = db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
+        if deleted == 0:
+            db.rollback()
+            raise HTTPException(status_code=404, detail="User not found")
+        db.commit()
     except SQLAlchemyError:
         db.rollback()
-    db.query(Notification).filter(Notification.user_id == user_id).delete(synchronize_session=False)
-    db.query(Subscription).filter(Subscription.user_id == user_id).delete(synchronize_session=False)
-    db.query(Expense).filter(Expense.user_id == user_id).delete(synchronize_session=False)
-
-    # Finally delete user
-    deleted = db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
-    if deleted == 0:
-        db.rollback()
-        raise HTTPException(status_code=404, detail="User not found")
-    db.commit()
+        raise HTTPException(status_code=500, detail="Account deletion failed")
     _clear_auth_cookies(response)
     return {"status": "deleted"}
