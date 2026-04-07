@@ -24,6 +24,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://subscription-expenses-manager.vercel.app"),
   title: {
     default: "SubManager",
     template: "%s | SubManager",
@@ -35,6 +36,7 @@ export const metadata: Metadata = {
     description: "Track subscriptions, expenses & passwords in one place.",
     siteName: "SubManager",
     type: "website",
+    url: "https://subscription-expenses-manager.vercel.app",
   },
   robots: {
     index: true,

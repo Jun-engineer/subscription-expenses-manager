@@ -55,7 +55,7 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     user = db.query(User).filter(User.email == form.username).first()
     if not user or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    token = create_access_token(str(user.id), expires_delta=timedelta(days=7))
+    token = create_access_token(str(user.id), expires_delta=timedelta(minutes=settings.access_token_expire_minutes))
     return Token(access_token=token)
 
 
@@ -86,8 +86,18 @@ def refresh_token(request: Request, response: Response, db: Session = Depends(ge
     rec = db.query(RefreshToken).filter(RefreshToken.token == rt, RefreshToken.revoked == False).first()
     if not rec or rec.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+    # Rotate: revoke the old token and issue a new one
+    rec.revoked = True
+    new_rt = str(uuid4())
+    new_rec = RefreshToken(
+        user_id=rec.user_id,
+        token=new_rt,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+    )
+    db.add(new_rec)
+    db.commit()
     access = create_access_token(str(rec.user_id), expires_delta=timedelta(minutes=settings.access_token_expire_minutes))
-    _set_auth_cookies(response, access)
+    _set_auth_cookies(response, access, new_rt)
     return Token(access_token=access)
 
 
@@ -108,14 +118,14 @@ def me(user: User = Depends(get_current_user)):
 
 @router.delete("/account")
 def delete_account(response: Response, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    user_id = str(user.id)
+    uid = user.id
     try:
-        db.query(RefreshToken).filter(RefreshToken.user_id == user_id).delete(synchronize_session=False)
-        db.query(VaultEntry).filter(VaultEntry.user_id == user_id).delete(synchronize_session=False)
-        db.query(Notification).filter(Notification.user_id == user_id).delete(synchronize_session=False)
-        db.query(Subscription).filter(Subscription.user_id == user_id).delete(synchronize_session=False)
-        db.query(Expense).filter(Expense.user_id == user_id).delete(synchronize_session=False)
-        deleted = db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
+        db.query(RefreshToken).filter(RefreshToken.user_id == uid).delete(synchronize_session=False)
+        db.query(VaultEntry).filter(VaultEntry.user_id == uid).delete(synchronize_session=False)
+        db.query(Notification).filter(Notification.user_id == uid).delete(synchronize_session=False)
+        db.query(Subscription).filter(Subscription.user_id == uid).delete(synchronize_session=False)
+        db.query(Expense).filter(Expense.user_id == uid).delete(synchronize_session=False)
+        deleted = db.query(User).filter(User.id == uid).delete(synchronize_session=False)
         if deleted == 0:
             db.rollback()
             raise HTTPException(status_code=404, detail="User not found")

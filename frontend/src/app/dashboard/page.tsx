@@ -87,6 +87,13 @@ function DashboardContent() {
 
       {error && <p className="text-sm rounded-xl p-3" style={{ background: "var(--danger-light)", color: "var(--danger)" }}>{error}</p>}
 
+      {!data && !error && (
+        <div className="text-center py-12">
+          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" style={{ color: "var(--accent)" }} />
+          <p className="text-sm mt-2" style={{ color: "var(--muted)" }}>Loading dashboard…</p>
+        </div>
+      )}
+
       {data && (
         <div className="space-y-6">
           <p className="text-sm" style={{ color: "var(--muted)" }}>Showing metrics for {data.month}</p>

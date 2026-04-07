@@ -19,11 +19,15 @@ def unread_count(db: Session = Depends(get_db), user: User = Depends(get_current
 
 
 @router.get("", response_model=list[NotificationOut])
-def list_notifications(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def list_notifications(limit: int = 50, offset: int = 0, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    limit = max(1, min(limit, 200))
+    offset = max(0, offset)
     return (
         db.query(Notification)
         .filter(Notification.user_id == user.id)
         .order_by(Notification.created_at.desc())
+        .offset(offset)
+        .limit(limit)
         .all()
     )
 

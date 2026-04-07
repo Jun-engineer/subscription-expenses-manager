@@ -14,6 +14,21 @@ type Notification = {
   created_at: string;
 };
 
+function formatPayload(type: string, payload?: Record<string, any> | null): string {
+  if (!payload) return "";
+  if (type === "payment_due" && payload.name) {
+    const amt = payload.amount;
+    const cur = payload.currency || "JPY";
+    try {
+      const f = new Intl.NumberFormat(undefined, { style: "currency", currency: cur }).format(amt);
+      return `${payload.name} \u2014 ${f} due`;
+    } catch {
+      return `${payload.name} \u2014 ${amt} ${cur} due`;
+    }
+  }
+  return JSON.stringify(payload, null, 2);
+}
+
 export default function NotificationsPage() {
   return (
     <AuthGuard>
@@ -87,7 +102,7 @@ function NotificationsContent() {
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{new Date(n.created_at).toLocaleString()}</div>
                 {n.payload && (
-                  <pre className="text-xs rounded-xl p-2 mt-2 overflow-auto" style={{ background: "var(--background)", border: "1px solid var(--card-border)" }}>{JSON.stringify(n.payload, null, 2)}</pre>
+                  <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{formatPayload(n.type, n.payload)}</div>
                 )}
               </div>
               {!n.read && (

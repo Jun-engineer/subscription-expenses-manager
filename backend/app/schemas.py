@@ -46,6 +46,21 @@ class SubscriptionCreate(SubscriptionBase):
     pass
 
 
+class SubscriptionUpdate(BaseModel):
+    name: Optional[str] = None
+    price: Optional[float] = Field(default=None, gt=0)
+    currency: Optional[str] = Field(default=None, min_length=3, max_length=3)
+    billing_cycle: Optional[Literal["monthly", "yearly", "weekly", "custom"]] = None
+    billing_interval: Optional[int] = Field(default=None, ge=1)
+    billing_day: Optional[int] = Field(default=None, ge=1, le=31)
+    start_date: Optional[date] = None
+    next_payment_date: Optional[date] = None
+    payment_method: Optional[str] = None
+    active: Optional[bool] = None
+    category: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class SubscriptionOut(SubscriptionBase):
     id: UUID
 
@@ -64,6 +79,15 @@ class ExpenseBase(BaseModel):
 
 class ExpenseCreate(ExpenseBase):
     pass
+
+
+class ExpenseUpdate(BaseModel):
+    date: Optional[date] = None
+    amount: Optional[float] = Field(default=None, gt=0)
+    currency: Optional[str] = Field(default=None, min_length=3, max_length=3)
+    category: Optional[str] = None
+    merchant: Optional[str] = None
+    notes: Optional[str] = None
 
 
 class ExpenseOut(ExpenseBase):

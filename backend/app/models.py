@@ -21,7 +21,7 @@ class User(Base):
     preferred_currency = Column(Text, default="JPY")
     timezone = Column(Text, default="Asia/Tokyo")
     created_at = Column(DateTime, default=_utcnow)
-    updated_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
 
     subscriptions = relationship("Subscription", back_populates="user", cascade="all,delete")
     expenses = relationship("Expense", back_populates="user", cascade="all,delete")
@@ -44,7 +44,7 @@ class Subscription(Base):
     category = Column(Text)
     notes = Column(Text)
     created_at = Column(DateTime, default=_utcnow)
-    updated_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
 
     user = relationship("User", back_populates="subscriptions")
     __table_args__ = (
@@ -64,7 +64,7 @@ class Expense(Base):
     merchant = Column(Text)
     notes = Column(Text)
     created_at = Column(DateTime, default=_utcnow)
-    updated_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
 
     user = relationship("User", back_populates="expenses")
     __table_args__ = (
@@ -82,6 +82,7 @@ class Notification(Base):
     created_at = Column(DateTime, default=_utcnow)
     __table_args__ = (
         Index("ix_notifications_user_created", "user_id", "created_at"),
+        Index("ix_notifications_user_read", "user_id", "read"),
     )
 
 
@@ -105,7 +106,7 @@ class VaultEntry(Base):
     encrypted_password = Column(Text, nullable=False)
     notes = Column(Text)
     created_at = Column(DateTime, default=_utcnow)
-    updated_at = Column(DateTime, default=_utcnow)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
     __table_args__ = (
         Index("ix_vault_user_created", "user_id", "created_at"),
     )

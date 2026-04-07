@@ -1,8 +1,8 @@
-import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+from .config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg://app:app@localhost:5432/app")
+DATABASE_URL = settings.database_url or "postgresql+psycopg://app:app@localhost:5432/app"
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_size=10, max_overflow=20)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 

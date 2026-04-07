@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .deps import get_db, get_current_user
-from .schemas import SubscriptionCreate, SubscriptionOut
+from .schemas import SubscriptionCreate, SubscriptionUpdate, SubscriptionOut
 from .models import Subscription, User
 
 router = APIRouter(prefix="/api/v1/subscriptions", tags=["subscriptions"])
@@ -40,11 +40,11 @@ def get_subscription(item_id: str, db: Session = Depends(get_db), user: User = D
 
 
 @router.put("/{item_id}", response_model=SubscriptionOut)
-def update_subscription(item_id: str, payload: SubscriptionCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def update_subscription(item_id: str, payload: SubscriptionUpdate, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     sub = db.query(Subscription).filter(Subscription.id == item_id, Subscription.user_id == user.id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Not found")
-    for k, v in payload.model_dump().items():
+    for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(sub, k, v)
     db.commit()
     db.refresh(sub)

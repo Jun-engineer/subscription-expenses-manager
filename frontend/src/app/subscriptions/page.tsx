@@ -139,7 +139,12 @@ function SubscriptionsContent() {
       await apiJson(`/api/v1/subscriptions/${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...editForm, price: priceNum }),
+        body: JSON.stringify({
+          name: editForm.name,
+          price: priceNum,
+          currency: editForm.currency,
+          billing_cycle: editForm.billing_cycle,
+        }),
       });
       setEditId(null);
       push({ type: "success", message: "Subscription updated" });
