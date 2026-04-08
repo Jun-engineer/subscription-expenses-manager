@@ -86,7 +86,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh] px-4">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-2" style={{ background: "var(--accent-light)" }}>
@@ -188,6 +188,32 @@ export default function Home() {
           </p>
         )}
       </div>
+
+      {/* SEO: visible feature content for crawlers */}
+      <section className="w-full max-w-2xl mt-16 mb-8 space-y-10 px-4">
+        <h2 className="text-xl font-bold text-center">Why SubManager?</h2>
+        <div className="grid gap-6 sm:grid-cols-3">
+          {[
+            { icon: "🔄", title: "Subscription Tracking", desc: "Monitor every recurring payment. Get notified before charges hit so you never overpay." },
+            { icon: "💰", title: "Expense Logging", desc: "Log one-off purchases across 20+ currencies with category and merchant tagging." },
+            { icon: "🔐", title: "Password Vault", desc: "Securely store site credentials with AES encryption — access them anywhere." },
+          ].map((f) => (
+            <article key={f.title} className="rounded-2xl p-5 text-center space-y-2" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+              <span className="text-2xl" role="img" aria-label={f.title}>{f.icon}</span>
+              <h3 className="font-semibold text-sm">{f.title}</h3>
+              <p className="text-xs" style={{ color: "var(--muted)" }}>{f.desc}</p>
+            </article>
+          ))}
+        </div>
+        <div className="text-center space-y-2">
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
+            Supports JPY, USD, EUR, GBP and 20+ currencies &middot; Works on web, iOS &amp; Android
+          </p>
+          <p className="text-xs" style={{ color: "var(--muted)" }}>
+            &copy; {new Date().getFullYear()} SubManager. Free &amp; open-source.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
